@@ -541,12 +541,16 @@ function copyAppsScript(){
 /* ═══════════════════════════════════════════
    PERSISTÊNCIA LOCAL
 ═══════════════════════════════════════════ */
-function defaultStrats(){return[]}
+function defaultStrats(){return[
+  {id:1,nome:'Pastas sem avanço',filtros:{sit:'Pasta',fonte:'',emp:'',etapa:'3',cad:'',rmin:'',dias:'7'}},
+  {id:2,nome:'Alta renda sem visita',filtros:{sit:'Em Atendimento',fonte:'',emp:'',etapa:'',cad:'',rmin:'7000',dias:''}},
+  {id:3,nome:'Leads frios para reativação',filtros:{sit:'',fonte:'',emp:'',etapa:'',cad:'Cadência 60 dias',rmin:'',dias:'30'}}
+]}
 function load(){
   try{leads=JSON.parse(localStorage.getItem('fc_leads')||'[]')}catch(e){leads=[]}
-  try{fontes=JSON.parse(localStorage.getItem('fc_fontes')||'null')||[]}catch(e){fontes=[]}
-  try{emps=JSON.parse(localStorage.getItem('fc_emps')||'null')||[]}catch(e){emps=[]}
-  try{estrategias=JSON.parse(localStorage.getItem('fc_strats')||'null')||[]}catch(e){estrategias=[]}
+  try{fontes=JSON.parse(localStorage.getItem('fc_fontes')||'null')||['Campanha 01','Campanha 02','Indicação','Morada - DV','Espontâneo','Lista']}catch(e){fontes=[]}
+  try{emps=JSON.parse(localStorage.getItem('fc_emps')||'null')||['Casa Prado','Alta Vista','Cores da Mata','Seleto Amoreiras']}catch(e){emps=[]}
+  try{estrategias=JSON.parse(localStorage.getItem('fc_strats')||'null')||defaultStrats()}catch(e){estrategias=defaultStrats()}
   gsUrl=getGsUrl();
   if(gsUrl)syncNow();else setGsBar('local');
 }
