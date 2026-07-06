@@ -1,0 +1,12 @@
+{
+  "name": "meu-funil-proxy",
+  "version": "1.0.0",
+  "description": "Proxy server para Meu Funil — Google Sheets sync",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
