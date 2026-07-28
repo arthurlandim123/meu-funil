@@ -1,0 +1,3701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel das Casas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#10293b;        /* azul-petróleo profundo — estrutura */
+    --ink-soft:#3c5a6e;
+    --paper:#f7f4ee;      /* papel claro, não-branco puro */
+    --paper-deep:#efe9dc;
+    --line:#d9d1bd;
+    --terra:#c1612f;      /* terracota — acento de ação */
+    --terra-deep:#a14b22;
+    --olive:#5c6e3f;       /* saldo positivo */
+    --rust:#a3402c;        /* saldo negativo / alerta */
+    --gold:#c79a3d;        /* destaque secundário */
+    --white:#fffdf9;
+    --shadow: 0 1px 0 rgba(16,41,59,0.06);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  .display{font-family:'Fraunces',serif;}
+
+  /* ---------- App shell ---------- */
+  .app{
+    max-width:1100px;
+    margin:0 auto;
+    padding:0 16px 100px;
+  }
+
+  header.top{
+    padding:28px 16px 18px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:22px;
+  }
+  header.top .brand{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  header.top h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:1.7rem;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header.top .tagline{
+    font-size:.78rem;
+    color:var(--ink-soft);
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  header.top .today{
+    font-size:.82rem;
+    color:var(--ink-soft);
+    text-align:right;
+  }
+
+  /* ---------- Casa selector pills ---------- */
+  .casa-tabs{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:2px 2px 14px;
+    margin-bottom:18px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .casa-tabs::-webkit-scrollbar{display:none;}
+  .casa-pill{
+    flex:0 0 auto;
+    padding:9px 16px;
+    border-radius:999px;
+    border:1.5px solid var(--line);
+    background:var(--white);
+    color:var(--ink-soft);
+    font-size:.86rem;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all .15s ease;
+  }
+  .casa-pill:hover{border-color:var(--ink-soft);}
+  .casa-pill.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--paper);
+  }
+  .casa-pill .dot{
+    display:inline-block;
+    width:7px;height:7px;border-radius:50%;
+    margin-right:7px;
+    position:relative; top:-1px;
+  }
+
+  /* ---------- Bottom nav (mobile-first) ---------- */
+  nav.bottom{
+    position:fixed;
+    bottom:0; left:0; right:0;
+    background:var(--white);
+    border-top:1.5px solid var(--ink);
+    display:flex;
+    z-index:40;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav.bottom button{
+    flex:1;
+    background:none;
+    border:none;
+    padding:10px 1px 8px;
+    font-family:'Inter',sans-serif;
+    font-size:.56rem;
+    font-weight:700;
+    letter-spacing:.01em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+  }
+  nav.bottom button .icon{ font-size:1.1rem; }
+  nav.bottom button .icon{font-size:1.25rem;}
+  nav.bottom button.active{color:var(--terra);}
+  nav.bottom button.active .icon{transform:translateY(-1px);}
+
+  /* ---------- Sections ---------- */
+  section{display:none;}
+  section.active{display:block; animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  h2.section-title{
+    font-family:'Fraunces',serif;
+    font-size:1.25rem;
+    font-weight:600;
+    margin:0 0 14px;
+  }
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--white);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:18px 20px;
+    margin-bottom:14px;
+  }
+  .card-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+
+  /* ---------- Metric grid (dashboard) ---------- */
+  .metric-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-bottom:18px;
+  }
+  @media(min-width:640px){
+    .metric-grid{grid-template-columns:repeat(4,1fr);}
+  }
+  .metric{
+    background:var(--white);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:16px 16px 14px;
+    position:relative;
+    overflow:hidden;
+  }
+  .metric .label{
+    font-size:.68rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .metric .value{
+    font-family:'Fraunces',serif;
+    font-size:1.55rem;
+    font-weight:600;
+    line-height:1.1;
+  }
+  .metric .sub{
+    font-size:.72rem;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .metric.accent-terra .value{color:var(--terra-deep);}
+  .metric.accent-olive .value{color:var(--olive);}
+  .metric.accent-rust .value{color:var(--rust);}
+
+  /* ---------- House ranking bars ---------- */
+  .rank-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--paper-deep);
+  }
+  .rank-row:last-child{border-bottom:none;}
+  .rank-name{
+    width:140px;
+    flex:0 0 140px;
+    font-size:.82rem;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .rank-bar-wrap{
+    flex:1;
+    height:10px;
+    background:var(--paper-deep);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .rank-bar{
+    height:100%;
+    border-radius:6px;
+    background:linear-gradient(90deg, var(--terra), var(--gold));
+  }
+  .rank-value{
+    width:88px;
+    flex:0 0 88px;
+    text-align:right;
+    font-size:.8rem;
+    font-weight:600;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- Lists (reservas / custos) ---------- */
+  .list-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:13px 0;
+    border-bottom:1px solid var(--paper-deep);
+  }
+  .list-item:last-child{border-bottom:none;}
+  .list-item .who{
+    font-weight:600;
+    font-size:.92rem;
+  }
+  .list-item .meta{
+    font-size:.75rem;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .list-item .amount{
+    font-weight:700;
+    font-size:.95rem;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  .channel-tag{
+    display:inline-block;
+    font-size:.65rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    padding:2px 7px;
+    border-radius:5px;
+    margin-right:6px;
+  }
+  .channel-airbnb{background:#fde7d8; color:#a14b22;}
+  .channel-booking{background:#dbe7f0; color:#1f4f6e;}
+  .channel-pix, .channel-direto{background:#e4ead8; color:#4a5c2e;}
+  .channel-outro{background:#ece6da; color:#6b6048;}
+
+  /* ---------- Forms ---------- */
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .form-grid .full{grid-column:1 / -1;}
+  label{
+    display:block;
+    font-size:.72rem;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  input, select{
+    width:100%;
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    background:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-size:.92rem;
+    color:var(--ink);
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--terra);
+    background:var(--white);
+  }
+  .field{margin-bottom:0;}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:12px 20px;
+    border-radius:10px;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:.88rem;
+    cursor:pointer;
+    transition:transform .1s ease, opacity .15s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--terra); color:var(--white);}
+  .btn-primary:hover{background:var(--terra-deep);}
+  .btn-ghost{background:none; border:1.5px solid var(--line); color:var(--ink-soft);}
+  .btn-block{width:100%;}
+  .btn-fab{
+    position:fixed;
+    bottom:78px;
+    right:18px;
+    width:56px;height:56px;
+    border-radius:50%;
+    background:var(--terra);
+    color:var(--white);
+    font-size:1.6rem;
+    box-shadow:0 6px 16px rgba(161,75,34,.35);
+    z-index:35;
+    border:none;
+    cursor:pointer;
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0;
+    background:rgba(16,41,59,.45);
+    z-index:50;
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:var(--paper);
+    width:100%;
+    max-width:560px;
+    border-radius:20px 20px 0 0;
+    padding:22px 20px calc(22px + env(safe-area-inset-bottom));
+    max-height:88vh;
+    overflow-y:auto;
+    animation:slideup .22s ease;
+  }
+  @media(min-width:640px){
+    .modal-backdrop{align-items:center;}
+    .modal{border-radius:18px; max-height:84vh;}
+  }
+  @keyframes slideup{from{transform:translateY(24px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+  .modal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .modal-head h3{
+    font-family:'Fraunces',serif;
+    font-size:1.15rem;
+    margin:0;
+  }
+  .modal-close{
+    background:none; border:none;
+    font-size:1.3rem;
+    color:var(--ink-soft);
+    cursor:pointer;
+    padding:4px;
+  }
+
+  /* ---------- Empty state ---------- */
+  .empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-soft);
+  }
+  .empty .icon{font-size:2.2rem; margin-bottom:10px;}
+  .empty p{font-size:.86rem; margin:4px 0;}
+
+  /* ---------- Channel filter chips ---------- */
+  .chip-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    padding:6px 13px;
+    border-radius:999px;
+    border:1.5px solid var(--line);
+    background:var(--white);
+    font-size:.76rem;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .chip.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--paper);
+  }
+
+  .month-divider{
+    font-size:.7rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--terra-deep);
+    margin:18px 0 6px;
+    padding-bottom:6px;
+    border-bottom:1px solid var(--line);
+  }
+  .month-divider:first-child{margin-top:0;}
+
+  .toast{
+    position:fixed;
+    bottom:90px;
+    left:50%;
+    transform:translateX(-50%) translateY(10px);
+    background:var(--ink);
+    color:var(--paper);
+    padding:11px 20px;
+    border-radius:10px;
+    font-size:.84rem;
+    font-weight:600;
+    z-index:60;
+    opacity:0;
+    transition:all .25s ease;
+    pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .loading-bar{
+    height:3px;
+    background:linear-gradient(90deg, transparent, var(--terra), transparent);
+    background-size:200% 100%;
+    animation:loadbar 1.1s infinite;
+    border-radius:3px;
+  }
+  @keyframes loadbar{0%{background-position:200% 0;} 100%{background-position:-200% 0;}}
+
+  .helper-text{font-size:.74rem; color:var(--ink-soft); margin-top:4px;}
+
+  /* ---------- Sync status bar ---------- */
+  .sync-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:.76rem;
+    font-weight:600;
+    margin-bottom:14px;
+    cursor:pointer;
+    border:1.5px solid transparent;
+  }
+  .sync-dot{
+    width:8px; height:8px;
+    border-radius:50%;
+    flex:0 0 auto;
+  }
+  .sync-link{
+    margin-left:auto;
+    text-decoration:underline;
+    font-size:.74rem;
+  }
+  .sync-cinza{background:#ece6da; color:#6b6048;}
+  .sync-cinza .sync-dot{background:#9b9078;}
+  .sync-amarelo{background:#fbf0d2; color:#8a6d1d;}
+  .sync-amarelo .sync-dot{background:#c79a3d; animation:pulse 1s infinite;}
+  .sync-verde{background:#e4ead8; color:#4a5c2e;}
+  .sync-verde .sync-dot{background:#5c6e3f;}
+  .sync-vermelho{background:#f6dcd5; color:#8a3220;}
+  .sync-vermelho .sync-dot{background:#a3402c;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+
+  pre#codigo-script{ -webkit-user-select:text; user-select:text; }
+  code{ background:var(--paper-deep); padding:1px 5px; border-radius:4px; font-size:.85em; }
+
+  .dot-inline{
+    display:inline-block;
+    width:8px; height:8px; border-radius:50%;
+    margin-right:8px;
+    position:relative; top:-1px;
+  }
+  .casa-pill-add{
+    border-style:dashed;
+    color:var(--terra-deep);
+    border-color:var(--terra);
+  }
+
+  /* ---------- Recebimentos ---------- */
+  .receb-card{
+    background:var(--white);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .receb-head{
+    padding:14px 16px 10px;
+    border-bottom:1px solid var(--paper-deep);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .receb-hospede{
+    font-weight:700;
+    font-size:.94rem;
+  }
+  .receb-desc{
+    font-size:.76rem;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .receb-total-val{
+    font-family:'Fraunces',serif;
+    font-size:1.05rem;
+    font-weight:600;
+    text-align:right;
+    white-space:nowrap;
+  }
+  .parcela-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 16px;
+    border-bottom:1px solid var(--paper-deep);
+  }
+  .parcela-row:last-child{ border-bottom:none; }
+  .parcela-info{ flex:1; }
+  .parcela-valor{
+    font-weight:700;
+    font-size:.9rem;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    min-width:80px;
+    text-align:right;
+  }
+  .badge{
+    display:inline-block;
+    font-size:.62rem;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:6px;
+    margin-top:3px;
+  }
+  .badge-pendente{ background:#fde7d8; color:#a14b22; }
+  .badge-recebido{ background:#e4ead8; color:#4a5c2e; }
+  .btn-baixa{
+    flex:0 0 auto;
+    padding:7px 12px;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    background:var(--white);
+    font-size:.74rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-baixa.receber{ border-color:var(--olive); color:var(--olive); }
+  .btn-baixa.estornar{ border-color:var(--line); color:var(--ink-soft); font-weight:500; }
+
+  /* ---------- Filtro de período (painel) ---------- */
+  .periodo-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+    padding:12px 14px;
+    background:var(--white);
+    border:1.5px solid var(--line);
+    border-radius:12px;
+  }
+  .periodo-bar label{ font-size:.7rem; font-weight:700; text-transform:uppercase; color:var(--ink-soft); letter-spacing:.03em; }
+  .periodo-bar input[type=date]{
+    padding:6px 10px;
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    font-size:.84rem;
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    width:auto;
+  }
+  .periodo-atalhos{ display:flex; gap:6px; flex-wrap:wrap; width:100%; }
+  .atalho-chip{
+    padding:5px 11px;
+    border-radius:999px;
+    border:1.5px solid var(--line);
+    background:var(--paper);
+    font-size:.72rem;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .atalho-chip.active{ background:var(--ink); border-color:var(--ink); color:var(--paper); }
+
+  /* ---------- Tabela realizado/previsto ---------- */
+  .fatur-table{ width:100%; border-collapse:collapse; font-size:.82rem; }
+  .fatur-table th{
+    text-align:left;
+    font-size:.66rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+    padding:6px 0 8px;
+    border-bottom:2px solid var(--line);
+  }
+  .fatur-table th:not(:first-child){ text-align:right; }
+  .fatur-table td{ padding:9px 0; border-bottom:1px solid var(--paper-deep); vertical-align:middle; }
+  .fatur-table td:not(:first-child){ text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+  .fatur-table tr.total-row td{ border-top:2px solid var(--line); border-bottom:none; font-weight:700; padding-top:11px; }
+  .fatur-table tr.total-row td:first-child{ font-family:'Fraunces',serif; font-size:.9rem; }
+  .cor-realizado{ color:var(--olive); }
+  .cor-previsto{ color:var(--gold); }
+  .cor-total{ color:var(--terra-deep); }
+
+  /* ---------- Backup / Import / Export ---------- */
+  .backup-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn-export{ background:var(--olive); color:#fffdf9; }
+  .btn-export:hover{ background:#4a5c2e; }
+  .btn-import{ background:var(--gold); color:var(--ink); }
+  .btn-import:hover{ background:#a37e28; }
+  .btn-deslogar{ background:var(--rust); color:#fffdf9; }
+  .btn-deslogar:hover{ background:#8a3220; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script id="seed-data" type="application/json">{"pvh": {"nome": "Casa PVH - Agenor de Carvalho", "reservas": [{"mes": "2026-01", "hospede": "James ", "periodo": "07 a 11/01", "dias": "4", "adultos": 9.0, "criancas": 1.0, "canal": "Airbnb", "valor_bruto": 2680.0, "taxa_limpeza": 240.0, "descontos": 128.0, "taxas": 508.51, "vlr_recebido": 2283.49}, {"mes": "2026-01", "hospede": "Tifane", "periodo": "22 a 25/01", "dias": "3", "adultos": 5.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1437.0, "taxa_limpeza": 230.0, "descontos": 187.53, "taxas": 269.46, "vlr_recebido": 1210.01}, {"mes": "2026-01", "hospede": "Valdevino Pouque", "periodo": "27 a 31/01", "dias": "5", "adultos": 2.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 2115.0, "taxa_limpeza": 167.0, "descontos": 0.0, "taxas": 296.64, "vlr_recebido": 1985.36}, {"mes": "2026-01", "hospede": "Rodrigo Souza", "periodo": "1 a 02/01", "dias": 10.0, "adultos": 6.0, "criancas": 4.0, "canal": "Booking", "valor_bruto": 747.0, "taxa_limpeza": 67.0, "descontos": 0.0, "taxas": 105.78, "vlr_recebido": 574.22}, {"mes": "2026-02", "hospede": "Maria leticia", "periodo": "12 a 17/02", "dias": "5", "adultos": 4.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 2159.0, "taxa_limpeza": 230.0, "descontos": 165.9, "taxas": 404.89, "vlr_recebido": 1818.21}, {"mes": "2026-02", "hospede": "Valdevino Pouque", "periodo": "1 a 02/02", "dias": 1.0, "adultos": 2.0, "criancas": 0.0, "canal": "Booking", "valor_bruto": 423.0, "taxa_limpeza": 33.0, "descontos": 0.0, "taxas": 59.0, "vlr_recebido": 397.0}, {"mes": "2026-03", "hospede": "Odaisa ", "periodo": "27 a 29/03", "dias": "2", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 867.0, "taxa_limpeza": 200.0, "descontos": 184.25, "taxas": 160.77, "vlr_recebido": 721.98}, {"mes": "2026-04", "hospede": "Francisco Alisson", "periodo": "1 a 5.4", "dias": "4", "adultos": 5.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 2396.0, "taxa_limpeza": 220.0, "descontos": 282.8, "taxas": 424.94, "vlr_recebido": 1908.2}, {"mes": "2026-04", "hospede": "Luana", "periodo": "9 a 11.4", "dias": "2", "adultos": 9.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1597.0, "taxa_limpeza": 200.0, "descontos": 0.0, "taxas": 327.28, "vlr_recebido": 1469.72}, {"mes": "2026-04", "hospede": "Deolindo", "periodo": "25 a 26.4", "dias": "1", "adultos": 6.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 640.0, "taxa_limpeza": 200.0, "descontos": 121.6, "taxas": 130.83, "vlr_recebido": 587.57}, {"mes": "2026-04", "hospede": "Anderson", "periodo": "28 a 29.04", "dias": "1", "adultos": 3.0, "criancas": 0.0, "canal": "airbnb", "valor_bruto": 317.0, "taxa_limpeza": 200.0, "descontos": 0.0, "taxas": 94.16, "vlr_recebido": 422.84}, {"mes": "2026-04", "hospede": "Liduina", "periodo": "16 a 19.04", "dias": "3", "adultos": 4.0, "criancas": 0.0, "canal": "Particular", "valor_bruto": 0.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 0.0}, {"mes": "2026-05", "hospede": "Marycelma ", "periodo": "01 a 03/04", "dias": "2", "adultos": 5.0, "criancas": 2.0, "canal": "Airbnb", "valor_bruto": 1572.0, "taxa_limpeza": 200.0, "descontos": 253.44, "taxas": 276.57, "vlr_recebido": 1241.99}, {"mes": "2026-07", "hospede": "Izaias", "periodo": "10 a 20/07", "dias": "10", "adultos": 9.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 5625.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 5625.0}], "custos": [{"data": "2025-01-22", "diarista": 316.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": "01 diária e meia e uber", "nfs_pix": null}, {"data": "2026-01-27", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": 80.0, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-28", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": 50.0, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2025-01-30", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": "Compra Chuveiro e instalação - Cláudio", "outros": null, "nfs_pix": null}, {"data": "2025-01-31", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-05", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-09", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": 50.0, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-11", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-03", "diarista": null, "luz": 284.08, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-10", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-12", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": "COMPRA GELADEIRA", "nfs_pix": null}, {"data": "2026-03-25", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-30", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-03", "diarista": null, "luz": 272.35, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-08", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-11", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-27", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-30", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-05-03", "diarista": null, "luz": 269.07, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-05-04", "diarista": 200.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-06-03", "diarista": null, "luz": 200.44, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-07-07", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-08-08", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-09-09", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-10-10", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-11-11", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-12-12", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}]}, "urupa01": {"nome": "Casa 01 - Urupá/JIPA", "reservas": [{"mes": "2026-01", "hospede": "Ar ", "periodo": "4 a 09/01", "dias": "5", "adultos": 3.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 750.0, "taxa_limpeza": 100.0, "descontos": 150.0, "taxas": 127.49, "vlr_recebido": 572.51}, {"mes": "2026-01", "hospede": "Lucas ", "periodo": "14 a 23/01", "dias": "9", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1080.0, "taxa_limpeza": 120.0, "descontos": 108.0, "taxas": 198.89, "vlr_recebido": 893.11}, {"mes": "2026-01", "hospede": "Victor luiz", "periodo": "27 a 30/01", "dias": "3", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 351.0, "taxa_limpeza": 120.0, "descontos": 63.18, "taxas": 74.27, "vlr_recebido": 333.55}, {"mes": "2026-01", "hospede": "Arthur", "periodo": "1 a 03/01", "dias": "2", "adultos": 5.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 335.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 335.0}, {"mes": "2026-02", "hospede": "Rafaela", "periodo": "07 a 17/02", "dias": "10", "adultos": 1.0, "criancas": 2.0, "canal": "Airbnb", "valor_bruto": 1648.0, "taxa_limpeza": 120.0, "descontos": 156.94, "taxas": 293.42, "vlr_recebido": 1317.64}, {"mes": "2026-03", "hospede": "Cleisson ", "periodo": "6 a 8/03", "dias": "2", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 302.0, "taxa_limpeza": 50.0, "descontos": 23.2, "taxas": 59.8, "vlr_recebido": 268.91}, {"mes": "2026-04", "hospede": "Marceli (05 cães)", "periodo": "2 a 5.4", "dias": "3", "adultos": 3.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 600.0, "taxa_limpeza": 120.0, "descontos": 131.13, "taxas": 131.13, "vlr_recebido": 588.87}, {"mes": "2026-04", "hospede": "Júnior ", "periodo": "11 a 13/04", "dias": "2", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 276.0, "taxa_limpeza": 80.0, "descontos": 55.2, "taxas": 54.78, "vlr_recebido": 246.02}, {"mes": "2026-04", "hospede": "Victor luiz", "periodo": "22 a 25/04", "dias": "3", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 414.0, "taxa_limpeza": 150.0, "descontos": 82.8, "taxas": 87.64, "vlr_recebido": 393.56}, {"mes": "2026-05", "hospede": "Jhennifer ", "periodo": "02 a 04/05", "dias": "2", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 478.0, "taxa_limpeza": 150.0, "descontos": 56.7, "taxas": 85.84, "vlr_recebido": 385.46}, {"mes": "2026-05", "hospede": "Carlos", "periodo": "05 a  20/05", "dias": "15", "adultos": 3.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 2835.0, "taxa_limpeza": 150.0, "descontos": 387.45, "taxas": 473.09, "vlr_recebido": 2124.46}, {"mes": "2026-05", "hospede": "Renata Maria", "periodo": "24 a 31.5", "dias": "7", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 4900.0, "taxa_limpeza": 0.0, "descontos": 490.0, "taxas": 803.18, "vlr_recebido": 3606.82}, {"mes": "2026-06", "hospede": "Álvaro", "periodo": "01 a 01.07", "dias": "30", "adultos": 2.0, "criancas": 1.0, "canal": "Airbnb", "valor_bruto": 4410.0, "taxa_limpeza": 125.0, "descontos": 660.0, "taxas": 891.15, "vlr_recebido": 2983.85}, {"mes": "2026-07", "hospede": "Álvaro", "periodo": "01 a 01.07", "dias": "30", "adultos": 2.0, "criancas": 1.0, "canal": "Airbnb", "valor_bruto": 4410.0, "taxa_limpeza": 125.0, "descontos": 660.0, "taxas": 891.15, "vlr_recebido": 2983.85}, {"mes": "2026-07", "hospede": "Ana paula", "periodo": "15 a 19/07", "dias": "3", "adultos": 3.0, "criancas": 1.0, "canal": "Airbnb", "valor_bruto": 960.0, "taxa_limpeza": 150.0, "descontos": 40.0, "taxas": 194.88, "vlr_recebido": 875.12}, {"mes": "2026-07", "hospede": "12 a 16", "periodo": null, "dias": null, "adultos": null, "criancas": null, "canal": null, "valor_bruto": null, "taxa_limpeza": null, "descontos": null, "taxas": null, "vlr_recebido": null}], "custos": [{"data": "2026-01-03", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-09", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-14", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-24", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-27", "diarista": null, "luz": 490.36, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-30", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-12", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-27", "diarista": null, "luz": 437.01, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-11", "diarista": 80.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-19", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 172.44, "outros": null, "nfs_pix": null}, {"data": "2026-03-27", "diarista": null, "luz": 132.07, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-28", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-14", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-16", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-17", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-28", "diarista": null, "luz": 370.91, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-30", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-05-05", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-06-06", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-07-07", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-08-08", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-09-09", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-10-10", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-11-11", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-12-12", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}]}, "urupa02": {"nome": "Casa 02 - Urupá/JIPA", "reservas": [{"mes": "2026-05", "hospede": "Diogo", "periodo": "27 a 29.5", "dias": "2", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1400.0, "taxa_limpeza": 0.0, "descontos": 140.0, "taxas": 229.48, "vlr_recebido": 1030.45}, {"mes": "2026-06", "hospede": "Suzana", "periodo": "28 a 30.06", "dias": "3", "adultos": 3.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 540.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 540.0}, {"mes": "2026-07", "hospede": "Suzana", "periodo": "01 a 6.7", "dias": "5", "adultos": 3.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 900.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 900.0}, {"mes": "2026-08", "hospede": "Hosana", "periodo": "14 a 16.8", "dias": "2", "adultos": 3.0, "criancas": 2.0, "canal": "Airbnb", "valor_bruto": 640.0, "taxa_limpeza": 150.0, "descontos": 80.0, "taxas": 129.31, "vlr_recebido": 580.69}], "custos": [{"data": "2026-01-02", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-10", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-13", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-14", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 420.0, "outros": null, "nfs_pix": null}, {"data": "2026-01-29", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-06", "diarista": 120.0, "luz": 184.27, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-20", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": 44.0, "manutencao": 115.0, "outros": null, "nfs_pix": null}, {"data": "2026-02-23", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-04", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-09", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": 42.0, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-10", "diarista": null, "luz": 270.87, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-21", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-30", "diarista": 170.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 60.0, "outros": null, "nfs_pix": null}, {"data": "2026-04-06", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-08", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-09", "diarista": null, "luz": 136.67, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-11", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 60.0, "outros": null, "nfs_pix": null}, {"data": "2026-04-13", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": 18.0, "nfs_pix": null}, {"data": "2026-04-23", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-27", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-28", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 110.0, "outros": null, "nfs_pix": null}, {"data": "2026-05-11", "diarista": null, "luz": 136.71, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-06-06", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-07-07", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-08-08", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-09-09", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-10-10", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-11-11", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-12-12", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}]}, "urupa03": {"nome": "Casa 03 - Urupá/JIPA", "reservas": [{"mes": "2026-01", "hospede": "Lohanna Valiente", "periodo": "01 a 02 ", "dias": "1 ", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 179.0, "taxa_limpeza": 10.0, "descontos": 17.0, "taxas": 31.0, "vlr_recebido": 141.0}, {"mes": "2026-01", "hospede": "Ilma Freitas Maia", "periodo": "4 a 8", "dias": "2", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 720.0, "taxa_limpeza": 120.0, "descontos": 144.0, "taxas": 126.76, "vlr_recebido": 569.24}, {"mes": "2026-01", "hospede": "Joao Lucas Soares Fritz", "periodo": "9 a 11", "dias": "4", "adultos": "2", "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 350.0, "taxa_limpeza": 120.0, "descontos": 70.0, "taxas": 72.85, "vlr_recebido": 327.15}, {"mes": "2026-01", "hospede": "Edivaldo Andrade ", "periodo": "13 a 28/01", "dias": "15", "adultos": 2.0, "criancas": 1.0, "canal": "PIX", "valor_bruto": 3000.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 3000.0}, {"mes": "2026-01", "hospede": "Lohanna ", "periodo": "1 a 02/01", "dias": "1", "adultos": 2.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 80.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 80.0}, {"mes": "2026-01", "hospede": "Django", "periodo": "29 a 01/02", "dias": "3", "adultos": 4.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 420.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 420.0}, {"mes": "2026-02", "hospede": "Maurizio Esposito", "periodo": "16 a 19", "dias": "3", "adultos": 1.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 570.0, "taxa_limpeza": 120.0, "descontos": 0.0, "taxas": 125.73, "vlr_recebido": 564.73}, {"mes": "2026-02", "hospede": "Sueid Paula de Souza", "periodo": "28 a 01/03", "dias": "1", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 153.0, "taxa_limpeza": 40.0, "descontos": 29.19, "taxas": 29.95, "vlr_recebido": 133.86}, {"mes": "2026-02", "hospede": "Django", "periodo": "01 a 06/02", "dias": "5", "adultos": 4.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 700.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 700.0}, {"mes": "2026-03", "hospede": "Sueid Paula de Souza", "periodo": "1 a 03/03", "dias": "2", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 308.0, "taxa_limpeza": 80.0, "descontos": 58.38, "taxas": 60.0, "vlr_recebido": 259.62}, {"mes": "2026-03", "hospede": "Marcos Vinicios Moreira", "periodo": "9 a 23/3", "dias": "14", "adultos": 3.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 2888.0, "taxa_limpeza": 155.0, "descontos": 393.72, "taxas": 482.5, "vlr_recebido": 2166.78}, {"mes": "2026-03", "hospede": "Halisson Tiago Lima", "periodo": "23 a 28", "dias": "5", "adultos": 3.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1115.0, "taxa_limpeza": 150.0, "descontos": 173.85, "taxas": 198.72, "vlr_recebido": 892.43}, {"mes": "2026-03", "hospede": "Matheus", "periodo": "6 a 08/03", "dias": "2", "adultos": 5.0, "criancas": 0.0, "canal": "PIX ", "valor_bruto": 653.48, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 653.48}, {"mes": "2026-04", "hospede": "Larissa Barros Arraujo", "periodo": "14 a 16 ", "dias": "2", "adultos": 1.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 312.0, "taxa_limpeza": 120.0, "descontos": 34.4, "taxas": 72.41, "vlr_recebido": 325.19}, {"mes": "2026-04", "hospede": "Cleberson Torres ", "periodo": "24 a 26 ", "dias": "2", "adultos": 3.0, "criancas": 1.0, "canal": "Airbnb", "valor_bruto": 424.0, "taxa_limpeza": 120.0, "descontos": 96.32, "taxas": 81.54, "vlr_recebido": 366.14}, {"mes": "2026-05", "hospede": "Fredy Alexander", "periodo": "15 a 18.5", "dias": "3", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 750.0, "taxa_limpeza": 150.0, "descontos": 0.0, "taxas": 163.91, "vlr_recebido": 736.09}, {"mes": "2026-05", "hospede": "Giovanna", "periodo": "24 a 29.5", "dias": "5", "adultos": 6.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 4140.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 4140.0}, {"mes": "2026-07", "hospede": "Felipe Santana ", "periodo": "3 a 5.7", "dias": "2", "adultos": 5.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 740.0, "taxa_limpeza": 120.0, "descontos": 50.0, "taxas": 147.52, "vlr_recebido": 662.48}, {"mes": "2026-07", "hospede": "Nuno Galvão", "periodo": "9 a 14.7", "dias": 5.0, "adultos": 4.0, "criancas": 1.0, "canal": "Booking", "valor_bruto": 1750.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 227.5, "vlr_recebido": 1522.5}, {"mes": "2026-07", "hospede": "Aline", "periodo": "14 a 19.7", "dias": "5", "adultos": 2.0, "criancas": 1.0, "canal": "PIX", "valor_bruto": 1050.0, "taxa_limpeza": null, "descontos": null, "taxas": null, "vlr_recebido": 1050.0}, {"mes": "2026-08", "hospede": "Carlos Adroel", "periodo": "13 a 16/08", "dias": "3", "adultos": 6.0, "criancas": 1.0, "canal": "PIX", "valor_bruto": 1050.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 1050.0}], "custos": [{"data": "2026-01-02", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-10", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-13", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-14", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 420.0, "outros": null, "nfs_pix": null}, {"data": "2026-01-29", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-06", "diarista": 120.0, "luz": 184.27, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-20", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": 44.0, "manutencao": 115.0, "outros": null, "nfs_pix": null}, {"data": "2026-02-23", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-04", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-09", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": 42.0, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-10", "diarista": null, "luz": 270.87, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-21", "diarista": 120.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-30", "diarista": 170.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 60.0, "outros": null, "nfs_pix": null}, {"data": "2026-04-06", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-08", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-09", "diarista": null, "luz": 136.67, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-11", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 60.0, "outros": null, "nfs_pix": null}, {"data": "2026-04-13", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": 18.0, "nfs_pix": null}, {"data": "2026-04-23", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-27", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-28", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 110.0, "outros": null, "nfs_pix": null}, {"data": "2026-05-11", "diarista": null, "luz": 136.71, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-06-06", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-07-07", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-08-08", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-09-09", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-10-10", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-11-11", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-12-12", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}]}, "colinapark": {"nome": "Casa JIPA - Colina Park", "reservas": [{"mes": "2026-01", "hospede": "Caio Cezar ", "periodo": "01 a 02.01", "dias": "1", "adultos": 4.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 325.75, "taxa_limpeza": 37.5, "descontos": 78.61, "taxas": 51.84, "vlr_recebido": 232.8}, {"mes": "2026-01", "hospede": "Ingrid Ribeiro ", "periodo": "03 a 05.01", "dias": "2", "adultos": 4.0, "criancas": 1.0, "canal": "Airbnb", "valor_bruto": 508.0, "taxa_limpeza": 150.0, "descontos": 117.04, "taxas": 98.53, "vlr_recebido": 442.43}, {"mes": "2026-01", "hospede": "Rafael silva", "periodo": "12 a 14", "dias": "2", "adultos": 5.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 550.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 100.16, "vlr_recebido": 449.84}, {"mes": "2026-01", "hospede": "Leandro Oliveira", "periodo": "21  a24", "dias": "3", "adultos": 10.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1500.0, "taxa_limpeza": 160.0, "descontos": 66.0, "taxas": 290.31, "vlr_recebido": 1303.69}, {"mes": "2026-01", "hospede": "Lorien Elanor ", "periodo": "26 a 31 ", "dias": "5", "adultos": 3.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1275.0, "taxa_limpeza": 160.0, "descontos": 252.6, "taxas": 215.34, "vlr_recebido": 967.06}, {"mes": "2026-01", "hospede": "Rafael Igor", "periodo": "14 a 17/01", "dias": "3", "adultos": 4.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 675.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 675.0}, {"mes": "2026-02", "hospede": "Erica De Oliveira Souza", "periodo": "14 a 16", "dias": "2", "adultos": 8.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 840.0, "taxa_limpeza": 160.0, "descontos": 44.0, "taxas": 174.11, "vlr_recebido": 781.89}, {"mes": "2026-02", "hospede": "Ana Cristina Roriz", "periodo": "17 a 19", "dias": "2", "adultos": 8.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1000.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 182.13, "vlr_recebido": 817.87}, {"mes": "2026-02", "hospede": "Fabrício Vieira", "periodo": "27 a 01.3", "dias": "2", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 428.0, "taxa_limpeza": 150.0, "descontos": 0.0, "taxas": 89.6, "vlr_recebido": 402.72}, {"mes": "2026-03", "hospede": "Joao Angelo Silva Nunes", "periodo": "7 a 8", "dias": "1", "adultos": 4.0, "criancas": 1.0, "canal": "Airbnb", "valor_bruto": 375.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 68.3, "vlr_recebido": 306.7}, {"mes": "2026-03", "hospede": "Victória Bergamim", "periodo": "9 a 10", "dias": "1", "adultos": 3.0, "criancas": 2.0, "canal": "Airbnb", "valor_bruto": 375.0, "taxa_limpeza": 100.0, "descontos": 0.0, "taxas": 86.51, "vlr_recebido": 388.49}, {"mes": "2026-03", "hospede": "Marcos Magno ", "periodo": "10.03 a 31.03", "dias": "22", "adultos": 4.0, "criancas": 3.0, "canal": "PIX", "valor_bruto": 4752.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 4752.0}, {"mes": "2026-04", "hospede": "Pablo Rocha Rocha", "periodo": "12 a 20", "dias": "8", "adultos": 4.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 2450.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 446.21, "vlr_recebido": 2003.79}, {"mes": "2026-04", "hospede": "Alexsander Herbert", "periodo": "21 a 30", "dias": "10", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 3149.41, "taxa_limpeza": 100.0, "descontos": 995.36, "taxas": 410.23, "vlr_recebido": 1843.52}, {"mes": "2026-04", "hospede": "Marcos Magno ", "periodo": "01. a 09.04", "dias": "8", "adultos": 4.0, "criancas": 3.0, "canal": "PIX", "valor_bruto": 1728.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 1728.0}, {"mes": "2026-05", "hospede": "Alexsander Herbert", "periodo": "01 a 07/05", "dias": "7", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 2204.58, "taxa_limpeza": 70.0, "descontos": 696.76, "taxas": 287.37, "vlr_recebido": 1290.45}, {"mes": "2026-05", "hospede": "Rafael Vargas", "periodo": "15 a 17.5", "dias": "2", "adultos": 10.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1430.0, "taxa_limpeza": 80.0, "descontos": 80.0, "taxas": 260.44, "vlr_recebido": 1169.56}, {"mes": "2026-06", "hospede": "Valnice", "periodo": "8 a 12.6", "dias": "4", "adultos": 2.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1156.0, "taxa_limpeza": 150.0, "descontos": 289.0, "taxas": 185.23, "vlr_recebido": 831.77}, {"mes": "2026-06", "hospede": "Janiele (Rodrigo)", "periodo": "17 a 26.06", "dias": "9", "adultos": 1.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 2601.0, "taxa_limpeza": 150.0, "descontos": 910.35, "taxas": 335.23, "vlr_recebido": 1505.42}, {"mes": "2026-06", "hospede": "Edson Bartelis", "periodo": "27 a 30.6", "dias": "3", "adultos": 3.0, "criancas": 2.0, "canal": "Airbnb", "valor_bruto": 1023.0, "taxa_limpeza": 150.0, "descontos": 0.0, "taxas": 213.65, "vlr_recebido": 959.35}, {"mes": "2026-06", "hospede": "Waliffe Jhonys", "periodo": "13 a 14.6", "dias": "1", "adultos": 9.0, "criancas": 0.0, "canal": "PIX", "valor_bruto": 540.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 50.0, "vlr_recebido": 490.0}, {"mes": "2026-07", "hospede": "Miqueias farias", "periodo": "1 a 5.7", "dias": "4", "adultos": 4.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1700.0, "taxa_limpeza": 150.0, "descontos": 0.0, "taxas": 336.94, "vlr_recebido": 1513.06}, {"mes": "2026-07", "hospede": "Suzana Mendes de Brito", "periodo": "6 a 31.7", "dias": "26", "adultos": 2.0, "criancas": 1.0, "canal": "Airbnb", "valor_bruto": 4680.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 4680.0}, {"mes": "2026-08", "hospede": "Adriano", "periodo": "13 a 16.8", "dias": "3", "adultos": 8.0, "criancas": 0.0, "canal": "Airbnb", "valor_bruto": 1600.0, "taxa_limpeza": 150.0, "descontos": 0.0, "taxas": 325.1, "vlr_recebido": 1459.9}, {"mes": "2026-08", "hospede": "Suzana Mendes de Brito", "periodo": "1 a 11.08", "dias": "10", "adultos": 2.0, "criancas": 1.0, "canal": "PIX", "valor_bruto": 1800.0, "taxa_limpeza": 0.0, "descontos": 0.0, "taxas": 0.0, "vlr_recebido": 1800.0}], "custos": [{"data": "2026-01-03", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-06", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-01-14", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2025-01-15", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": 400.0, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2025-01-16", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2025-01-25", "diarista": null, "luz": null, "agua": null, "internet": 99.9, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2025-01-26", "diarista": 150.0, "luz": 169.72, "agua": 34.86, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 340.0, "outros": null, "nfs_pix": null}, {"data": "2026-02-05", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-14", "diarista": 30.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-15", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-24", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-02-26", "diarista": null, "luz": 169.72, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-03", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-03-10", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 750.0, "outros": null, "nfs_pix": null}, {"data": "2026-03-26", "diarista": null, "luz": 213.73, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-06", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": 150.0, "outros": null, "nfs_pix": null}, {"data": "2026-04-11", "diarista": 150.0, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-04-26", "diarista": null, "luz": 286.3, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-05-01", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-05-10", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-05-26", "diarista": null, "luz": 313.19, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-06-06", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-07-07", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-08-08", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-09-09", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-10-10", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-11-11", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}, {"data": "2026-12-12", "diarista": null, "luz": null, "agua": null, "internet": null, "lavadeira": null, "produtos_limpeza": null, "manutencao": null, "outros": null, "nfs_pix": null}]}}</script>
+<script>
+
+
+// ===================== ESTADO E PERSISTÊNCIA =====================
+
+const COLORS = ['#c1612f', '#5c6e3f', '#1f4f6e', '#a3402c', '#c79a3d'];
+
+const NOMES_CASA_CURTO = {
+  pvh: 'PVH',
+  urupa01: 'Urupa01',
+  urupa02: 'Urupa02',
+  urupa03: 'Urupa03',
+  colinapark: 'ColinaPark',
+};
+
+// Gera um sufixo estável (sem acentos/espaços) para nomear as abas no Sheets.
+// Casas do seed original usam o mapa fixo (compatibilidade); casas novas geram a partir do nome.
+function sufixoCasa(casaId){
+  if(NOMES_CASA_CURTO[casaId]) return NOMES_CASA_CURTO[casaId];
+  const casa = STATE.casas[casaId];
+  const base = (casa && casa.nome) ? casa.nome : casaId;
+  return base
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .replace(/[^a-zA-Z0-9]+/g,'')
+    .slice(0, 24) || casaId;
+}
+
+let STATE = {
+  casas: {},          // { casaId: { nome, reservas:[], custos:[], recebimentos:[] } }
+  metas: {},          // { casaId: { ticketMedio: number|null } }
+  metasPeriodoIni: '', // periodo proprio do card de metas (vazio = segue filtro do painel)
+  metasPeriodoFim: '',
+  casaAtiva: null,
+  abaAtiva: 'dashboard',
+  filtroCanal: 'todos',
+  metricaComparar: 'faturamento',
+  casasComparar: null,
+  // filtro de período do painel
+  periodoInicio: new Date().getFullYear() + '-01-01',
+  periodoFim:    new Date().getFullYear() + '-12-31',
+  sync: {
+    status: 'local',
+    ultimoSync: null,
+    erro: null,
+  },
+};
+
+const STORAGE_KEY = 'painel-casas-dados-v1';
+const METAS_KEY   = 'painel-casas-metas-v1';
+const CONFIG_KEY  = 'painel-casas-config-v1';
+const LEGACY_ARTIFACT_KEY = 'painel-casas-v1'; // chave usada na versão artifact (window.storage)
+
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function getConfig(){
+  try{
+    const raw = localStorage.getItem(CONFIG_KEY);
+    return raw ? JSON.parse(raw) : { scriptUrl: '' };
+  }catch(e){
+    return { scriptUrl: '' };
+  }
+}
+function setConfig(cfg){
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+}
+
+// ----- Carregamento inicial: localStorage > migração de artifact > seed das planilhas -----
+
+// Migração central: garante que todas as casas têm recebimentos[] e que reservas
+// com valorRecebido legado foram convertidas em parcela 'recebido'.
+// Idempotente: pode rodar várias vezes sem duplicar.
+function migrarCasas(casas){
+  Object.keys(casas).forEach(casaId => {
+    const casa = casas[casaId];
+    if(!casa.recebimentos) casa.recebimentos = [];
+
+    casa.reservas.forEach(res => {
+      const vlr = Number(res.valorRecebido) || 0;
+      if(vlr > 0){
+        // verifica se já existe parcela migrada para esta reserva (evita duplicar)
+        const jaTemParcela = casa.recebimentos.some(r => r._reservaId === res.id);
+        if(!jaTemParcela){
+          // usa o mês da reserva como dataBaixa (ex: '2026-03' -> '2026-03-01')
+          const dataBaixa = res.mes ? res.mes + '-01' : hojeISO();
+          casa.recebimentos.push({
+            id: uid(),
+            _reservaId: res.id,           // link para rastreabilidade
+            hospede: res.hospede || '',
+            descricao: res.periodo ? 'Reserva ' + res.periodo : 'Reserva ' + (res.mes||''),
+            avulso: false,                 // veio de uma reserva
+            parcelas: [{
+              id: uid(),
+              valor: vlr,
+              dataPrevista: dataBaixa,
+              status: 'recebido',
+              dataBaixa: dataBaixa,
+            }],
+          });
+        }
+        // zera o campo na reserva para não ser mais usado em cálculos
+        res.valorRecebido = 0;
+        res.valorBruto    = res.valorBruto    || 0;
+        res.taxaLimpeza   = res.taxaLimpeza   || 0;
+        res.descontos     = res.descontos     || 0;
+        res.taxas         = res.taxas         || 0;
+      }
+    });
+  });
+  return casas;
+}
+
+async function carregarEstado(){
+  // 1) Dados em localStorage
+  const local = localStorage.getItem(STORAGE_KEY);
+  if(local){
+    try{
+      STATE.casas = migrarCasas(JSON.parse(local));
+      salvarLocal(); // persiste migração
+      return;
+    }catch(e){ /* segue para fallback */ }
+  }
+
+  // 2) Migração: versão anterior (artifact, window.storage)
+  if(window.storage && typeof window.storage.get === 'function'){
+    try{
+      const saved = await window.storage.get(LEGACY_ARTIFACT_KEY, false);
+      if(saved && saved.value){
+        STATE.casas = migrarCasas(JSON.parse(saved.value));
+        salvarLocal();
+        return;
+      }
+    }catch(e){ /* não tinha dado legado */ }
+  }
+
+  // 3) Primeira vez: seed das planilhas originais
+  const seedEl = document.getElementById('seed-data');
+  const seed = JSON.parse(seedEl.textContent);
+  const casas = {};
+  Object.keys(seed).forEach(key => {
+    const c = seed[key];
+    casas[key] = {
+      nome: c.nome,
+      recebimentos: [],
+      reservas: c.reservas.map(r => ({
+        id: uid(),
+        mes: r.mes,
+        hospede: (r.hospede || '').trim(),
+        periodo: r.periodo,
+        dias: parseFloat(r.dias) || 0,
+        adultos: r.adultos || 0,
+        criancas: r.criancas || 0,
+        canal: normalizaCanal(r.canal),
+        // campos financeiros mantidos só para exibição no histórico, não usados em totais
+        valorBruto:   r.valor_bruto   || 0,
+        taxaLimpeza:  r.taxa_limpeza  || 0,
+        descontos:    r.descontos     || 0,
+        taxas:        r.taxas         || 0,
+        valorRecebido: 0, // zerado intencionalmente — migrarCasas vai converter
+      })),
+      custos: c.custos.filter(x => x.data).map(x => ({
+        id: uid(),
+        data: x.data,
+        diarista: x.diarista || 0,
+        luz: x.luz || 0,
+        agua: x.agua || 0,
+        internet: x.internet || 0,
+        lavadeira: x.lavadeira || 0,
+        produtosLimpeza: x.produtos_limpeza || 0,
+        manutencao: x.manutencao || 0,
+        outros: x.outros && typeof x.outros === 'number' ? x.outros : 0,
+        obs: x.outros && typeof x.outros === 'string' ? x.outros : '',
+      })),
+    };
+    // injeta os valorRecebidos originais antes de migrar (o seed tem r.vlr_recebido)
+    c.reservas.forEach((r, i) => {
+      casas[key].reservas[i].valorRecebido = r.vlr_recebido || 0;
+    });
+  });
+  STATE.casas = migrarCasas(casas);
+  salvarLocal();
+}
+
+// Grava local imediatamente (síncrono, sem rede) — sempre a primeira coisa que acontece.
+function salvarLocal(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE.casas));
+    localStorage.setItem(METAS_KEY,   JSON.stringify(STATE.metas));
+  }catch(e){
+    console.error('Falha ao salvar localmente', e);
+    mostrarToast('Nao foi possivel salvar neste aparelho.');
+  }
+}
+
+function carregarMetas(){
+  try{
+    const raw = localStorage.getItem(METAS_KEY);
+    if(raw) STATE.metas = JSON.parse(raw);
+  }catch(e){ STATE.metas = {}; }
+}
+
+// Garante que toda casa tem uma entrada em STATE.metas.
+// A meta é sempre manual — sem cálculo automático.
+function garantirMetas(){
+  Object.keys(STATE.casas).forEach(casaId => {
+    if(!STATE.metas[casaId]){
+      STATE.metas[casaId] = { ticketMedio: null };
+    }
+  });
+}
+
+// Ponto único chamado por toda ação de escrita: salva local na hora e agenda sync.
+async function salvarEstado(opts){
+  salvarLocal();
+  agendarSync(opts && opts.imediato);
+}
+
+function normalizaCanal(c){
+  if(!c) return 'Outro';
+  const s = String(c).trim().toLowerCase();
+  if(s.includes('airbnb')) return 'Airbnb';
+  if(s.includes('booking')) return 'Booking';
+  if(s.includes('pix')) return 'PIX';
+  return 'Outro';
+}
+
+// ===================== GESTÃO DE CASAS =====================
+
+function gerarCasaId(nome){
+  const base = nome
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'casa';
+  let id = base;
+  let n = 2;
+  while(STATE.casas[id]){
+    id = base + '-' + n;
+    n++;
+  }
+  return id;
+}
+
+async function adicionarCasa(nome){
+  nome = (nome || '').trim();
+  if(!nome) return null;
+  const id = gerarCasaId(nome);
+  STATE.casas[id] = { nome, reservas: [], custos: [] };
+  await salvarEstado();
+  return id;
+}
+
+async function renomearCasa(casaId, novoNome){
+  novoNome = (novoNome || '').trim();
+  if(!STATE.casas[casaId] || !novoNome) return;
+  STATE.casas[casaId].nome = novoNome;
+  await salvarEstado();
+}
+
+async function removerCasa(casaId){
+  if(!STATE.casas[casaId]) return;
+  delete STATE.casas[casaId];
+  if(STATE.casaAtiva === casaId) STATE.casaAtiva = null;
+  await salvarEstado({imediato:true}); // remoção é destrutiva, sincroniza já
+}
+
+// ===================== SINCRONIZAÇÃO COM GOOGLE SHEETS =====================
+// Regra crítica: o LOCAL é sempre o master.
+// - Se há dados locais ao conectar/sincronizar -> ENVIA para a nuvem (nunca lê, para não zerar a base local).
+// - Só LÊ da nuvem quando o app está completamente vazio (aparelho novo, sem nenhum dado local).
+
+let syncTimer = null;
+const DEBOUNCE_MS = 3000;
+
+function agendarSync(imediato){
+  const cfg = getConfig();
+  if(!cfg.scriptUrl) return; // sem planilha conectada, não faz nada
+  clearTimeout(syncTimer);
+  if(imediato){
+    enviarParaNuvem();
+  } else {
+    syncTimer = setTimeout(enviarParaNuvem, DEBOUNCE_MS);
+  }
+}
+
+function casaEstaVazia(){
+  const ids = Object.keys(STATE.casas);
+  if(ids.length === 0) return true;
+  return ids.every(id => {
+    const c = STATE.casas[id];
+    return (!c.reservas || c.reservas.length===0) && (!c.custos || c.custos.length===0);
+  });
+}
+
+function setSyncStatus(status, extra){
+  STATE.sync.status = status;
+  if(status === 'sincronizado') STATE.sync.ultimoSync = new Date();
+  if(status === 'erro') STATE.sync.erro = extra || 'Erro desconhecido';
+  if(status !== 'erro') STATE.sync.erro = null;
+  atualizarBarraStatus();
+}
+
+async function enviarParaNuvem(){
+  const cfg = getConfig();
+  if(!cfg.scriptUrl) return;
+  setSyncStatus('conectando');
+
+  try{
+    const lotes = montarLotesParaEnvio();
+    for(let i=0; i<lotes.length; i++){
+      const lote = lotes[i];
+      const url = cfg.scriptUrl
+        + '?action=write'
+        + '&aba=' + encodeURIComponent(lote.aba)
+        + '&append=' + (lote.append ? 'true' : 'false')
+        + '&data=' + encodeURIComponent(JSON.stringify(lote.linhas));
+      await fetchViaImagemOuJsonp(url);
+    }
+    setSyncStatus('sincronizado');
+  }catch(e){
+    console.error('Erro ao sincronizar', e);
+    setSyncStatus('erro', e.message || 'Falha de conexão');
+  }
+}
+
+// Quebra cada aba (Reservas_X / Custos_X) em lotes de ~10 linhas,
+// porque URLs muito longas estouram limite do navegador em GET.
+const TAMANHO_LOTE = 10;
+const CABECALHO_CASAS = ['id','nome','sufixo'];
+
+function montarLotesParaEnvio(){
+  const lotes = [];
+
+  // aba-índice: registra quais casas existem, para a leitura inicial num aparelho novo
+  const linhasCasas = Object.keys(STATE.casas).map(casaId => [
+    casaId, STATE.casas[casaId].nome, sufixoCasa(casaId),
+  ]);
+  empilharLotes(lotes, '_Casas', CABECALHO_CASAS, linhasCasas);
+
+  Object.keys(STATE.casas).forEach(casaId => {
+    const casa = STATE.casas[casaId];
+    const sufixo = sufixoCasa(casaId);
+
+    const linhasReservas = casa.reservas.map(r => [
+      r.id, r.mes, r.hospede, r.periodo, r.dias, r.adultos, r.criancas,
+      r.canal, r.valorBruto, r.taxaLimpeza, r.descontos, r.taxas, r.valorRecebido,
+    ]);
+    empilharLotes(lotes, 'Reservas_' + sufixo, CABECALHO_RESERVAS, linhasReservas);
+
+    const linhasCustos = casa.custos.map(c => [
+      c.id, c.data, c.diarista, c.luz, c.agua, c.internet, c.lavadeira,
+      c.produtosLimpeza, c.manutencao, c.outros, c.obs,
+    ]);
+    empilharLotes(lotes, 'Custos_' + sufixo, CABECALHO_CUSTOS, linhasCustos);
+
+    // Recebimentos: cada parcela vira uma linha (desnormalizamos para planilha plana)
+    const linhasReceb = (casa.recebimentos||[]).flatMap(rec =>
+      (rec.parcelas||[]).map(p => [
+        rec.id, rec.hospede, rec.descricao, rec.casaId||casaId,
+        p.id, p.valor, p.dataPrevista, p.status, p.dataBaixa||'',
+      ])
+    );
+    empilharLotes(lotes, 'Recebimentos_' + sufixo, CABECALHO_RECEBIMENTOS, linhasReceb);
+  });
+  return lotes;
+}
+
+const CABECALHO_RESERVAS = ['id','mes','hospede','periodo','dias','adultos','criancas','canal','valorBruto','taxaLimpeza','descontos','taxas','valorRecebido'];
+const CABECALHO_CUSTOS = ['id','data','diarista','luz','agua','internet','lavadeira','produtosLimpeza','manutencao','outros','obs'];
+const CABECALHO_RECEBIMENTOS = ['recId','hospede','descricao','casaId','parcelaId','valor','dataPrevista','status','dataBaixa'];
+
+function empilharLotes(lotes, aba, cabecalho, linhas){
+  if(linhas.length === 0){
+    // ainda envia um "lote zero" só com cabeçalho, para limpar a aba se ficou vazia
+    lotes.push({ aba, append:false, linhas:[cabecalho] });
+    return;
+  }
+  for(let i=0; i<linhas.length; i+=TAMANHO_LOTE){
+    const pedaco = linhas.slice(i, i+TAMANHO_LOTE);
+    const primeiro = i===0;
+    lotes.push({
+      aba,
+      append: !primeiro,
+      linhas: primeiro ? [cabecalho, ...pedaco] : pedaco,
+    });
+  }
+}
+
+// Lê da nuvem — só usado quando o app está vazio (aparelho novo).
+// Primeiro lê a aba-índice "_Casas" para descobrir quais casas existem,
+// depois lê Reservas_X / Custos_X de cada uma.
+async function lerDaNuvem(){
+  const cfg = getConfig();
+  if(!cfg.scriptUrl) return false;
+  setSyncStatus('conectando');
+  try{
+    const indice = await lerAbaDaNuvem(cfg.scriptUrl, '_Casas');
+    if(indice.length === 0){
+      setSyncStatus('erro', 'Planilha vazia ou ainda sem dados');
+      return false;
+    }
+    const casasNovas = {};
+    for(const linha of indice){
+      const casaId = linha.id;
+      const sufixo = linha.sufixo;
+      const reservas = await lerAbaDaNuvem(cfg.scriptUrl, 'Reservas_' + sufixo);
+      const custos   = await lerAbaDaNuvem(cfg.scriptUrl, 'Custos_'   + sufixo);
+      const recebLinhas = await lerAbaDaNuvem(cfg.scriptUrl, 'Recebimentos_' + sufixo);
+
+      casasNovas[casaId] = {
+        nome: linha.nome || casaId,
+        recebimentos: linhasParaRecebimentos(recebLinhas),
+        reservas: reservas.map(linhaParaReserva),
+        custos: custos.map(linhaParaCusto),
+      };
+    }
+    STATE.casas = casasNovas;
+    salvarLocal();
+    setSyncStatus('sincronizado');
+    return true;
+  }catch(e){
+    console.error('Erro ao ler da nuvem', e);
+    setSyncStatus('erro', e.message || 'Falha ao ler a planilha');
+    return false;
+  }
+}
+
+async function lerAbaDaNuvem(scriptUrl, aba){
+  const url = scriptUrl + '?action=read&aba=' + encodeURIComponent(aba);
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('Não foi possível ler ' + aba);
+  const json = await resp.json();
+  if(json.erro) throw new Error(json.erro);
+  return json.linhas || [];
+}
+
+function linhaParaReserva(linha){
+  // linha vem como objeto {id, mes, hospede, ...} a partir do cabeçalho
+  return {
+    id: linha.id || uid(),
+    mes: linha.mes || '',
+    hospede: linha.hospede || '',
+    periodo: linha.periodo || '',
+    dias: parseFloat(linha.dias) || 0,
+    adultos: parseFloat(linha.adultos) || 0,
+    criancas: parseFloat(linha.criancas) || 0,
+    canal: normalizaCanal(linha.canal),
+    valorBruto: parseFloat(linha.valorBruto) || 0,
+    taxaLimpeza: parseFloat(linha.taxaLimpeza) || 0,
+    descontos: parseFloat(linha.descontos) || 0,
+    taxas: parseFloat(linha.taxas) || 0,
+    valorRecebido: parseFloat(linha.valorRecebido) || 0,
+  };
+}
+function linhaParaCusto(linha){
+  return {
+    id: linha.id || uid(),
+    data: linha.data || '',
+    diarista: parseFloat(linha.diarista) || 0,
+    luz: parseFloat(linha.luz) || 0,
+    agua: parseFloat(linha.agua) || 0,
+    internet: parseFloat(linha.internet) || 0,
+    lavadeira: parseFloat(linha.lavadeira) || 0,
+    produtosLimpeza: parseFloat(linha.produtosLimpeza) || 0,
+    manutencao: parseFloat(linha.manutencao) || 0,
+    outros: parseFloat(linha.outros) || 0,
+    obs: linha.obs || '',
+  };
+}
+
+// Reconstrói recebimentos aninhados a partir de linhas planas do Sheets
+function linhasParaRecebimentos(linhas){
+  const mapa = {};
+  linhas.forEach(l => {
+    if(!l.recId) return;
+    if(!mapa[l.recId]){
+      mapa[l.recId] = { id: l.recId, hospede: l.hospede||'', descricao: l.descricao||'', parcelas: [] };
+    }
+    if(l.parcelaId){
+      mapa[l.recId].parcelas.push({
+        id: l.parcelaId,
+        valor: parseFloat(l.valor) || 0,
+        dataPrevista: l.dataPrevista || '',
+        status: l.status || 'pendente',
+        dataBaixa: l.dataBaixa || '',
+      });
+    }
+  });
+  return Object.values(mapa);
+}
+
+// GET simples — Apps Script aceita CORS em GET normalmente, mas alguns ambientes
+// (arquivo local) bloqueiam fetch. Como o app vai ficar hospedado em GitHub Pages,
+// fetch via GET funciona direto.
+async function fetchViaImagemOuJsonp(url){
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('Falha de rede ao enviar dados (HTTP ' + resp.status + ')');
+  const texto = await resp.text();
+  let json;
+  try{ json = JSON.parse(texto); }catch(e){ throw new Error('Resposta inesperada do Apps Script'); }
+  if(json && json.erro) throw new Error(json.erro);
+  return json;
+}
+
+// Conectar planilha: chamado pelo botão "Conectar planilha" na aba Configuração.
+async function conectarPlanilha(url){
+  const cfg = getConfig();
+  cfg.scriptUrl = url.trim();
+  setConfig(cfg);
+
+  if(casaEstaVazia()){
+    // aparelho novo, sem nada local -> tenta ler da nuvem
+    await lerDaNuvem();
+  } else {
+    // já tem dados locais -> local é master, manda para a nuvem
+    await enviarParaNuvem();
+  }
+  render();
+}
+
+async function sincronizarAgora(){
+  const cfg = getConfig();
+  if(!cfg.scriptUrl){
+    mostrarToast('Conecte uma planilha primeiro');
+    return;
+  }
+  await enviarParaNuvem();
+  render();
+}
+
+function desconectarPlanilha(){
+  const cfg = getConfig();
+  cfg.scriptUrl = '';
+  setConfig(cfg);
+  STATE.sync.status = 'local';
+  STATE.sync.ultimoSync = null;
+  STATE.sync.erro = null;
+  render();
+}
+
+function atualizarBarraStatus(){
+  const el = document.getElementById('sync-status-bar');
+  if(el) el.outerHTML = renderBarraStatus();
+}
+
+// ===================== HELPERS DE FORMATO =====================
+
+function fmtMoeda(v){
+  v = Number(v) || 0;
+  return v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits:2});
+}
+function fmtMoedaCompacta(v){
+  v = Number(v) || 0;
+  const neg = v < 0;
+  const abs = Math.abs(v);
+  let out;
+  if(abs >= 1000) out = 'R$ ' + (abs/1000).toLocaleString('pt-BR',{maximumFractionDigits:1}) + 'k';
+  else out = 'R$ ' + abs.toLocaleString('pt-BR',{maximumFractionDigits:0});
+  return neg ? '-' + out : out;
+}
+function fmtMes(mesStr){
+  if(!mesStr) return '—';
+  const [y,m] = mesStr.split('-');
+  const nomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  return nomes[parseInt(m,10)-1] + ' ' + y;
+}
+function fmtData(dataStr){
+  if(!dataStr) return '—';
+  const [y,m,d] = dataStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+const fmtDataBR = fmtData;
+function hojeISO(){
+  return new Date().toISOString().slice(0,10);
+}
+function mesAtualISO(){
+  return new Date().toISOString().slice(0,7);
+}
+
+function corDaCasa(casaId){
+  const ids = Object.keys(STATE.casas);
+  const idx = ids.indexOf(casaId);
+  return COLORS[idx % COLORS.length];
+}
+
+// ===================== CÁLCULOS =====================
+
+// Receita de uma casa = soma de todas as parcelas 'recebido'
+// (fonte única de verdade financeira — reservas não carregam mais dinheiro)
+function totalReceitaParcelas(casaId){
+  const casa = STATE.casas[casaId];
+  if(!casa) return 0;
+  return (casa.recebimentos||[]).reduce((s, rec) =>
+    s + (rec.parcelas||[]).reduce((ss, p) =>
+      ss + (p.status === 'recebido' ? (p.valor||0) : 0), 0), 0);
+}
+
+function totalPrevistoParcelas(casaId){
+  const casa = STATE.casas[casaId];
+  if(!casa) return 0;
+  return (casa.recebimentos||[]).reduce((s, rec) =>
+    s + (rec.parcelas||[]).reduce((ss, p) =>
+      ss + (p.status === 'pendente' ? (p.valor||0) : 0), 0), 0);
+}
+
+// Mantido para cálculo de custo de um lançamento individual
+function totalCustoLancamento(c){
+  return ['diarista','luz','agua','internet','lavadeira','produtosLimpeza','manutencao','outros']
+    .reduce((s,k) => s + (Number(c[k]) || 0), 0);
+}
+
+function reservasDaCasa(casaId, filtroMes){
+  const casa = STATE.casas[casaId];
+  if(!casa) return [];
+  let lista = casa.reservas.slice();
+  if(filtroMes) lista = lista.filter(r => r.mes === filtroMes);
+  if(STATE.filtroCanal !== 'todos') lista = lista.filter(r => r.canal === STATE.filtroCanal);
+  return lista.sort((a,b) => (b.mes||'').localeCompare(a.mes||''));
+}
+function custosDaCasa(casaId){
+  const casa = STATE.casas[casaId];
+  if(!casa) return [];
+  return casa.custos.slice().sort((a,b) => (b.data||'').localeCompare(a.data||''));
+}
+
+function resumoCasa(casaId){
+  const casa = STATE.casas[casaId];
+  if(!casa) return {receita:0, custos:0, liquido:0, diarias:0, reservasCount:0};
+  const receita = totalReceitaParcelas(casaId);
+  const custos  = casa.custos.reduce((s,c) => s + totalCustoLancamento(c), 0);
+  const diarias = casa.reservas.reduce((s,r) => s + (Number(r.dias)||0), 0);
+  return { receita, custos, liquido: receita - custos, diarias, reservasCount: casa.reservas.length };
+}
+
+function resumoGeral(){
+  let receita=0, custos=0, diarias=0, reservasCount=0;
+  Object.keys(STATE.casas).forEach(id => {
+    const r = resumoCasa(id);
+    receita += r.receita; custos += r.custos;
+    diarias += r.diarias; reservasCount += r.reservasCount;
+  });
+  return {receita, custos, liquido: receita-custos, diarias, reservasCount};
+}
+
+// ===================== METAS — TICKET MÉDIO E REVPAD =====================
+
+// Ticket médio no período: soma das receitas (parcelas recebidas vinculadas a reservas)
+// dividida pela soma das diárias das reservas cujo mês cai no período.
+function calcularTicketMedioPeriodo(casaId, inicio, fim){
+  const casa = STATE.casas[casaId];
+  if(!casa) return null;
+  let totalReceita = 0, totalDiarias = 0;
+  casa.reservas.forEach(res => {
+    const mesRes = res.mes || '';
+    if(!mesRes) return;
+    const dataRef = mesRes + '-01';
+    if(dataRef < inicio || dataRef > fim) return;
+    const dias = Number(res.dias) || 0;
+    if(dias === 0) return;
+    // receita desta reserva = parcelas recebidas vinculadas a ela
+    const rec = (casa.recebimentos||[]).find(r => r._reservaId === res.id);
+    const receita = (rec?.parcelas||[]).reduce((s,p) => s + (p.valor||0), 0);
+    if(receita === 0) return;
+    totalReceita  += receita;
+    totalDiarias  += dias;
+  });
+  if(totalDiarias === 0) return null;
+  return totalReceita / totalDiarias;
+}
+
+// RevPAD no período: receita total (parcelas recebidas com dataBaixa no período)
+// dividida pelo número de dias do calendário do período.
+// Semáforo: compara ticket médio atual com a meta manual.
+// Retorna 'verde' | 'amarelo' | 'vermelho' | 'sem-meta'
+// Verde >= meta | Amarelo dentro de 15% abaixo | Vermelho > 15% abaixo
+const THRESHOLD_AMARELO = 0.15;
+
+function semaforo(atual, meta){
+  if(!meta || meta <= 0)       return 'sem-meta';
+  if(atual === null || atual === undefined) return 'sem-meta';
+  const ratio = atual / meta;
+  if(ratio >= 1)                        return 'verde';
+  if(ratio >= (1 - THRESHOLD_AMARELO)) return 'amarelo';
+  return 'vermelho';
+}
+
+const COR_SEMAFORO = {
+  'verde':    { bg:'#e4ead8', txt:'#4a5c2e', icone:'▲', label:'Acima da meta'  },
+  'amarelo':  { bg:'#fbf0d2', txt:'#8a6d1d', icone:'►', label:'Proximo da meta'},
+  'vermelho': { bg:'#f6dcd5', txt:'#8a3220', icone:'▼', label:'Abaixo da meta' },
+  'sem-meta': { bg:'#ece6da', txt:'#6b6048', icone:'—', label:'Meta nao definida'},
+};
+
+function badgeTicketMedio(atual, meta){
+  const s = semaforo(atual, meta);
+  const { bg, txt, icone, label } = COR_SEMAFORO[s];
+  const valorStr = atual !== null ? fmtMoeda(atual) + '/diária' : '—';
+  const metaStr  = meta  !== null && meta > 0 ? fmtMoeda(meta) + '/diária' : 'não definida';
+  return `
+    <div style="background:${bg}; border-radius:10px; padding:11px 14px;">
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+        <span style="font-size:.8rem; font-weight:700; color:${txt};">${icone}</span>
+        <span style="font-size:.64rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:${txt};">${label}</span>
+      </div>
+      <div style="font-family:'Fraunces',serif; font-size:1.45rem; font-weight:700; color:${txt}; line-height:1.1;">${valorStr}</div>
+      <div style="font-size:.7rem; color:${txt}; opacity:.75; margin-top:4px;">meta: ${metaStr}</div>
+    </div>
+  `;
+}
+
+// ---- Cálculos de recebimentos por período ----
+// inicio/fim: strings 'YYYY-MM-DD'
+function resumoRecebimentosPeriodo(inicio, fim){
+  let realizado = 0, previsto = 0;
+  Object.keys(STATE.casas).forEach(casaId => {
+    const r = resumoRecebimentosCasaPeriodo(casaId, inicio, fim);
+    realizado += r.realizado;
+    previsto  += r.previsto;
+  });
+  return { realizado, previsto, total: realizado + previsto };
+}
+
+function resumoRecebimentosCasaPeriodo(casaId, inicio, fim){
+  const casa = STATE.casas[casaId];
+  if(!casa) return { realizado:0, previsto:0, total:0 };
+  let realizado = 0, previsto = 0;
+  (casa.recebimentos||[]).forEach(rec => {
+    (rec.parcelas||[]).forEach(p => {
+      if(p.status === 'recebido'){
+        const d = p.dataBaixa || p.dataPrevista;
+        if(d >= inicio && d <= fim) realizado += (p.valor||0);
+      } else {
+        if(p.dataPrevista >= inicio && p.dataPrevista <= fim) previsto += (p.valor||0);
+      }
+    });
+  });
+  return { realizado, previsto, total: realizado + previsto };
+}
+
+// Série mensal usando parcelas como fonte (não reservas)
+function serieMensalCasa(casaId, metrica){
+  const casa = STATE.casas[casaId];
+  if(!casa) return {};
+  const porMesReceita = {};  // mês → soma de parcelas recebidas
+  const porMesPrevisto = {}; // mês → soma de parcelas pendentes
+  const porMesCusto = {};
+
+  (casa.recebimentos||[]).forEach(rec => {
+    (rec.parcelas||[]).forEach(p => {
+      if(p.status === 'recebido'){
+        const mes = (p.dataBaixa || p.dataPrevista || '').slice(0,7);
+        if(mes) porMesReceita[mes] = (porMesReceita[mes]||0) + (p.valor||0);
+      } else {
+        const mes = (p.dataPrevista||'').slice(0,7);
+        if(mes) porMesPrevisto[mes] = (porMesPrevisto[mes]||0) + (p.valor||0);
+      }
+    });
+  });
+  casa.custos.forEach(c => {
+    const mes = (c.data||'').slice(0,7);
+    if(mes) porMesCusto[mes] = (porMesCusto[mes]||0) + totalCustoLancamento(c);
+  });
+
+  const todosMeses = new Set([
+    ...Object.keys(porMesReceita),
+    ...Object.keys(porMesPrevisto),
+    ...Object.keys(porMesCusto),
+  ]);
+  const serie = {};
+  todosMeses.forEach(mes => {
+    const receita  = porMesReceita[mes]  || 0;
+    const previsto = porMesPrevisto[mes] || 0;
+    const custo    = porMesCusto[mes]    || 0;
+    if(metrica === 'faturamento') serie[mes] = receita + previsto; // realizado + previsto
+    else if(metrica === 'custo')  serie[mes] = custo;
+    else serie[mes] = (receita + previsto) - custo; // lucro projetado
+  });
+  return serie;
+}
+
+// ---- Ações sobre parcelas ----
+
+async function darBaixaParcela(casaId, recebimentoId, parcelaId){
+  const rec = (STATE.casas[casaId]?.recebimentos||[]).find(r=>r.id===recebimentoId);
+  const p   = (rec?.parcelas||[]).find(p=>p.id===parcelaId);
+  if(!p) return;
+  p.status = 'recebido';
+  p.dataBaixa = hojeISO();
+  await salvarEstado();
+}
+
+async function estornarBaixaParcela(casaId, recebimentoId, parcelaId){
+  const rec = (STATE.casas[casaId]?.recebimentos||[]).find(r=>r.id===recebimentoId);
+  const p   = (rec?.parcelas||[]).find(p=>p.id===parcelaId);
+  if(!p) return;
+  p.status = 'pendente';
+  p.dataBaixa = '';
+  await salvarEstado();
+}
+
+async function excluirRecebimento(casaId, recebimentoId){
+  const casa = STATE.casas[casaId];
+  if(!casa) return;
+  casa.recebimentos = (casa.recebimentos||[]).filter(r=>r.id!==recebimentoId);
+  await salvarEstado();
+}
+
+// Atalhos de período para o painel
+function atalhosPeriodo(){
+  const ano = new Date().getFullYear();
+  return [
+    { label: 'Jan–Dez '  + ano,   inicio: ano+'-01-01',     fim: ano+'-12-31' },
+    { label: 'Jan–Jun '  + ano,   inicio: ano+'-01-01',     fim: ano+'-06-30' },
+    { label: 'Jul–Dez '  + ano,   inicio: ano+'-07-01',     fim: ano+'-12-31' },
+    { label: (ano-1) + ' completo', inicio: (ano-1)+'-01-01', fim: (ano-1)+'-12-31' },
+  ];
+}
+
+function mesesComDados(casaId){
+  // considera meses de reservas E de parcelas de recebimento
+  const casa = STATE.casas[casaId];
+  if(!casa) return [];
+  const set = new Set();
+  casa.reservas.forEach(r => r.mes && set.add(r.mes));
+  (casa.recebimentos||[]).forEach(rec =>
+    (rec.parcelas||[]).forEach(p => {
+      const m = (p.dataBaixa || p.dataPrevista || '').slice(0,7);
+      if(m) set.add(m);
+    })
+  );
+  return Array.from(set).sort();
+}
+
+// Une os meses de todas as casas selecionadas para servir de eixo X comum.
+function mesesUnificados(casaIds){
+  const set = new Set();
+  casaIds.forEach(id => mesesComDados(id).forEach(m => set.add(m)));
+  casaIds.forEach(id => {
+    (STATE.casas[id]?.custos||[]).forEach(c => {
+      const mes = (c.data||'').slice(0,7);
+      if(mes) set.add(mes);
+    });
+  });
+  return Array.from(set).sort();
+}
+
+// ===================== RENDERIZAÇÃO: SHELL =====================
+
+const root = document.getElementById('root');
+
+function render(){
+  root.innerHTML = `
+    <div class="app">
+      <header class="top">
+        <div class="brand">
+          <h1 class="display">Painel das Casas</h1>
+          <span class="tagline">Gestão de temporada · Airbnb &amp; Booking</span>
+        </div>
+        <div class="today">${dataExtenso()}</div>
+      </header>
+
+      ${renderCasaTabs()}
+
+      <section class="${STATE.abaAtiva==='dashboard'?'active':''}" id="sec-dashboard">
+        ${renderDashboard()}
+      </section>
+      <section class="${STATE.abaAtiva==='reservas'?'active':''}" id="sec-reservas">
+        ${renderReservas()}
+      </section>
+      <section class="${STATE.abaAtiva==='custos'?'active':''}" id="sec-custos">
+        ${renderCustos()}
+      </section>
+      <section class="${STATE.abaAtiva==='receber'?'active':''}" id="sec-receber">
+        ${renderReceber()}
+      </section>
+      <section class="${STATE.abaAtiva==='comparar'?'active':''}" id="sec-comparar">
+        ${renderComparar()}
+      </section>
+      <section class="${STATE.abaAtiva==='config'?'active':''}" id="sec-config">
+        ${renderConfig()}
+      </section>
+    </div>
+
+    ${(STATE.abaAtiva==='reservas'||STATE.abaAtiva==='custos'||STATE.abaAtiva==='receber') ? renderFab() : ''}
+
+    <nav class="bottom">
+      <button data-aba="dashboard" class="${STATE.abaAtiva==='dashboard'?'active':''}">
+        <span class="icon">◐</span>PAINEL
+      </button>
+      <button data-aba="reservas" class="${STATE.abaAtiva==='reservas'?'active':''}">
+        <span class="icon">⌂</span>RESERVAS
+      </button>
+      <button data-aba="custos" class="${STATE.abaAtiva==='custos'?'active':''}">
+        <span class="icon">✎</span>CUSTOS
+      </button>
+      <button data-aba="receber" class="${STATE.abaAtiva==='receber'?'active':''}">
+        <span class="icon">₿</span>RECEBER
+      </button>
+      <button data-aba="comparar" class="${STATE.abaAtiva==='comparar'?'active':''}">
+        <span class="icon">∿</span>COMPARAR
+      </button>
+      <button data-aba="config" class="${STATE.abaAtiva==='config'?'active':''}">
+        <span class="icon">⚙</span>CONFIG
+      </button>
+    </nav>
+
+    <div class="toast" id="toast"></div>
+    <div id="modal-root"></div>
+  `;
+  attachEvents();
+}
+
+function renderBarraStatus(){
+  const s = STATE.sync.status;
+  const mapa = {
+    local:        { cor:'cinza',     texto:'Salvando só neste aparelho' },
+    conectando:   { cor:'amarelo',   texto:'Sincronizando…' },
+    sincronizado: { cor:'verde',     texto:'Sincronizado às ' + fmtHora(STATE.sync.ultimoSync) },
+    erro:         { cor:'vermelho',  texto:'Erro ao sincronizar: ' + (STATE.sync.erro||'') },
+  };
+  const info = mapa[s] || mapa.local;
+  return `
+    <div class="sync-bar sync-${info.cor}" id="sync-status-bar" data-goto-config="1">
+      <span class="sync-dot"></span>
+      <span class="sync-text">${info.texto}</span>
+      ${s==='local' ? '<span class="sync-link">conectar →</span>' : ''}
+    </div>
+  `;
+}
+
+function fmtHora(d){
+  if(!d) return '';
+  const dt = (d instanceof Date) ? d : new Date(d);
+  return dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+
+function dataExtenso(){
+  const d = new Date();
+  const dias = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${dias[d.getDay()]}, ${d.getDate()} ${meses[d.getMonth()]}`;
+}
+
+function renderCasaTabs(){
+  const ids = Object.keys(STATE.casas);
+  let html = `<div class="casa-tabs">`;
+  html += `<button class="casa-pill ${STATE.casaAtiva===null?'active':''}" data-casa="todas">
+    Todas as casas
+  </button>`;
+  ids.forEach(id => {
+    const ativa = STATE.casaAtiva === id;
+    html += `<button class="casa-pill ${ativa?'active':''}" data-casa="${id}">
+      <span class="dot" style="background:${corDaCasa(id)}"></span>${nomeCurto(STATE.casas[id].nome)}
+    </button>`;
+  });
+  html += `<button class="casa-pill casa-pill-add" id="btn-nova-casa">+ Nova casa</button>`;
+  html += `</div>`;
+  return html;
+}
+
+function nomeCurto(nome){
+  return nome.replace('Casa ', '').replace(' - ', ' · ');
+}
+
+// ===================== RENDERIZAÇÃO: DASHBOARD =====================
+
+function renderDashboard(){
+  if(STATE.casaAtiva === null){
+    return renderDashboardGeral();
+  }
+  return renderDashboardCasa(STATE.casaAtiva);
+}
+
+function renderDashboardGeral(){
+  const ids = Object.keys(STATE.casas);
+  const g = resumoGeral();
+  const maxReceita = Math.max(...ids.map(id => resumoCasa(id).receita), 1);
+  const ranking = ids.map(id => ({id, nome: STATE.casas[id].nome, ...resumoCasa(id)}))
+    .sort((a,b) => b.receita - a.receita);
+
+  const ini = STATE.periodoInicio;
+  const fim = STATE.periodoFim;
+  const atalhos = atalhosPeriodo();
+
+  // Tabela faturamento por casa no período
+  const linhasCasas = ids.map(id => {
+    const r = resumoRecebimentosCasaPeriodo(id, ini, fim);
+    return { id, nome: STATE.casas[id].nome, ...r };
+  });
+  const totPer = resumoRecebimentosPeriodo(ini, fim);
+  const algumDado = linhasCasas.some(l => l.total > 0);
+
+  return `
+    <h2 class="section-title">Visão geral · ${ids.length} casas</h2>
+
+    <!-- Métricas rápidas (acumulado total, sem filtro de período) -->
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="label">Receita acumulada</div>
+        <div class="value">${fmtMoedaCompacta(g.receita)}</div>
+        <div class="sub">${g.reservasCount} reservas</div>
+      </div>
+      <div class="metric">
+        <div class="label">Custos acumulados</div>
+        <div class="value">${fmtMoedaCompacta(g.custos)}</div>
+        <div class="sub">manutenção e contas</div>
+      </div>
+      <div class="metric ${g.liquido>=0?'accent-olive':'accent-rust'}">
+        <div class="label">Líquido acumulado</div>
+        <div class="value">${fmtMoedaCompacta(g.liquido)}</div>
+        <div class="sub">receita − custos</div>
+      </div>
+      <div class="metric accent-terra">
+        <div class="label">Diárias ocupadas</div>
+        <div class="value">${g.diarias}</div>
+        <div class="sub">no total registrado</div>
+      </div>
+    </div>
+
+    <!-- Filtro de período -->
+    <div class="periodo-bar">
+      <label>Período</label>
+      <input type="date" id="periodo-ini" value="${ini}">
+      <span style="color:var(--ink-soft); font-size:.78rem;">até</span>
+      <input type="date" id="periodo-fim" value="${fim}">
+      <div class="periodo-atalhos">
+        ${atalhos.map(a => `
+          <button class="atalho-chip ${a.inicio===ini&&a.fim===fim?'active':''}"
+            data-atalho-ini="${a.inicio}" data-atalho-fim="${a.fim}">${a.label}</button>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Tabela Realizado / Previsto / Total por casa -->
+    <div class="card">
+      <h3 style="margin:0 0 14px; font-family:'Fraunces',serif; font-size:1.02rem;">
+        Faturamento no período
+        <span style="font-family:'Inter',sans-serif; font-size:.72rem; font-weight:400; color:var(--ink-soft); margin-left:6px;">
+          ${fmtDataBR(ini)} – ${fmtDataBR(fim)}
+        </span>
+      </h3>
+      ${algumDado ? `
+      <table class="fatur-table">
+        <thead>
+          <tr>
+            <th>Casa</th>
+            <th class="cor-realizado">Realizado</th>
+            <th class="cor-previsto">Previsto</th>
+            <th class="cor-total">Real+Prev</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${linhasCasas.map(l => `
+            <tr>
+              <td><span class="dot-inline" style="background:${corDaCasa(l.id)}"></span>${nomeCurto(l.nome)}</td>
+              <td class="cor-realizado">${fmtMoedaCompacta(l.realizado)}</td>
+              <td class="cor-previsto">${fmtMoedaCompacta(l.previsto)}</td>
+              <td class="cor-total">${fmtMoedaCompacta(l.total)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td>Total</td>
+            <td class="cor-realizado">${fmtMoedaCompacta(totPer.realizado)}</td>
+            <td class="cor-previsto">${fmtMoedaCompacta(totPer.previsto)}</td>
+            <td class="cor-total">${fmtMoedaCompacta(totPer.total)}</td>
+          </tr>
+        </tfoot>
+      </table>` : `
+      <div class="empty" style="padding:20px 10px;">
+        <p style="margin:0; font-size:.84rem; color:var(--ink-soft);">Nenhum recebimento lançado neste período. Cadastre entradas na aba <strong>RECEBER</strong>.</p>
+      </div>`}
+    </div>
+
+    <!-- Card de Metas: Ticket Médio por diária -->
+    ${renderCardMetas(ids, ini, fim)}
+
+    <!-- Ranking por receita (acumulada) -->
+    <div class="card">
+      <h3 style="margin:0 0 14px; font-family:'Fraunces',serif; font-size:1.02rem;">Receita por casa (acumulada)</h3>
+      ${ranking.map(c => `
+        <div class="rank-row">
+          <div class="rank-name">${nomeCurto(c.nome)}</div>
+          <div class="rank-bar-wrap">
+            <div class="rank-bar" style="width:${Math.max(4,(c.receita/maxReceita*100))}%; background:${corDaCasa(c.id)}"></div>
+          </div>
+          <div class="rank-value">${fmtMoedaCompacta(c.receita)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderCardMetas(ids, iniPainel, fimPainel){
+  // Período próprio do card — se definido usa ele; senão cai no filtro do painel
+  const iniProprio = STATE.metasPeriodoIni || '';
+  const fimProprio = STATE.metasPeriodoFim || '';
+  const usandoProprio = iniProprio && fimProprio;
+
+  const iniAnalise = usandoProprio ? iniProprio : iniPainel;
+  const fimAnalise = usandoProprio ? fimProprio : fimPainel;
+
+  const atalhosMetas = [
+    { label:'Mês atual',   ini: mesAtualISO()+'-01', fim: ultimoDiaMesAtual() },
+    { label:'Trim. atual', ini: inicioTrimestreAtual(), fim: fimTrimestreAtual() },
+    { label:'Este ano',    ini: new Date().getFullYear()+'-01-01', fim: new Date().getFullYear()+'-12-31' },
+    { label:'Filtro do painel', ini:'', fim:'' },
+  ];
+
+  return `
+    <div class="card">
+      <!-- Cabeçalho e seletor de período -->
+      <div style="margin-bottom:14px;">
+        <h3 style="margin:0 0 10px; font-family:'Fraunces',serif; font-size:1.02rem;">
+          Media de Diarias — Ticket Medio
+        </h3>
+        <div style="font-size:.72rem; color:var(--ink-soft); margin-bottom:10px;">
+          Receita total das reservas dividida pelo numero de diarias no periodo escolhido.
+        </div>
+
+        <!-- Atalhos de período -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+          ${atalhosMetas.map(a => {
+            const ativo = a.ini===iniProprio && a.fim===fimProprio;
+            const clicado = `data-meta-periodo-ini="${a.ini}" data-meta-periodo-fim="${a.fim}"`;
+            return `<button class="chip ${ativo?'active':''}" ${clicado}>${a.label}</button>`;
+          }).join('')}
+        </div>
+
+        <!-- Datas manuais do período próprio -->
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <input type="date" id="meta-ini" value="${iniProprio}"
+            style="padding:6px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:.82rem; font-family:'Inter',sans-serif; background:var(--paper); color:var(--ink); width:auto;">
+          <span style="font-size:.78rem; color:var(--ink-soft);">até</span>
+          <input type="date" id="meta-fim" value="${fimProprio}"
+            style="padding:6px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:.82rem; font-family:'Inter',sans-serif; background:var(--paper); color:var(--ink); width:auto;">
+          ${!usandoProprio ? `<span style="font-size:.72rem; color:var(--terra-deep); font-weight:600;">usando filtro do painel</span>` : ''}
+        </div>
+
+        <div style="font-size:.68rem; color:var(--ink-soft); margin-top:6px;">
+          Analisando: ${fmtDataBR(iniAnalise)} – ${fmtDataBR(fimAnalise)}
+        </div>
+      </div>
+
+      <!-- Linha por casa -->
+      ${ids.map(id => {
+        const tm   = calcularTicketMedioPeriodo(id, iniAnalise, fimAnalise);
+        const meta = (STATE.metas[id] || {}).ticketMedio || null;
+        const s    = semaforo(tm, meta);
+        const { bg, txt, icone, label } = COR_SEMAFORO[s];
+        const tmStr   = tm   !== null ? fmtMoeda(tm)   : '—';
+        const metaStr = meta !== null ? fmtMoeda(meta) : 'nao definida';
+
+        // barra de progresso em relação à meta
+        const pct = (meta && tm) ? Math.min(Math.round((tm/meta)*100), 150) : 0;
+
+        return `
+        <div style="margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--paper-deep);">
+          <!-- Nome + botão ajustar meta -->
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span class="dot-inline" style="background:${corDaCasa(id)}; margin-right:0;"></span>
+            <span style="font-weight:700; font-size:.88rem;">${nomeCurto(STATE.casas[id].nome)}</span>
+            <span style="font-size:.72rem; color:var(--ink-soft); margin-left:2px;">meta: ${metaStr}/diaria</span>
+            <button class="btn btn-ghost" style="padding:3px 10px; font-size:.66rem; margin-left:auto;"
+              data-editar-meta="${id}">Definir meta</button>
+          </div>
+
+          <!-- Badge resultado + barra de progresso -->
+          <div style="background:${bg}; border-radius:10px; padding:11px 14px;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+              <div>
+                <div style="font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:${txt}; margin-bottom:3px;">
+                  ${icone} ${label}
+                </div>
+                <div style="font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; color:${txt}; line-height:1;">
+                  ${tmStr}<span style="font-size:.8rem; font-weight:400;">/diaria</span>
+                </div>
+              </div>
+              ${meta && tm ? `
+              <div style="text-align:right;">
+                <div style="font-size:.68rem; color:${txt}; opacity:.8;">${pct}% da meta</div>
+                <div style="font-size:.68rem; color:${txt}; opacity:.7; margin-top:2px;">
+                  ${tm >= meta
+                    ? '+' + fmtMoeda(tm - meta) + ' acima'
+                    : fmtMoeda(meta - tm) + ' abaixo'}
+                </div>
+              </div>` : ''}
+            </div>
+            ${meta ? `
+            <div style="background:rgba(0,0,0,.1); border-radius:4px; height:6px; overflow:hidden;">
+              <div style="height:100%; border-radius:4px; background:${txt}; width:${Math.min(pct,100)}%; transition:width .4s ease;"></div>
+            </div>` : ''}
+          </div>
+        </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function ultimoDiaMesAtual(){
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth()+1, 0).toISOString().slice(0,10);
+}
+function inicioTrimestreAtual(){
+  const m = new Date().getMonth();
+  const q = Math.floor(m/3)*3;
+  return new Date().getFullYear() + '-' + String(q+1).padStart(2,'0') + '-01';
+}
+function fimTrimestreAtual(){
+  const m = new Date().getMonth();
+  const q = Math.floor(m/3)*3 + 2;
+  const fim = new Date(new Date().getFullYear(), q+1, 0);
+  return fim.toISOString().slice(0,10);
+}
+
+function renderDashboardCasa(casaId){
+  const casa = STATE.casas[casaId];
+  if(!casa) return '';
+  const r = resumoCasa(casaId);
+
+  // receita por mês: usa parcelas recebidas (mesma fonte que resumoCasa)
+  const porMes = serieMensalCasa(casaId, 'faturamento'); // realizado + previsto por mês
+  const mesesOrdenados = Object.keys(porMes).sort();
+  const maxMes = Math.max(...Object.values(porMes), 1);
+
+  // receita por canal: soma de parcelas dos recebimentos vinculados a reserva daquele canal
+  const porCanal = {};
+  casa.reservas.forEach(res => {
+    const rec = (casa.recebimentos||[]).find(rc => rc._reservaId === res.id);
+    const val = (rec?.parcelas||[]).reduce((s,p)=>s+(p.valor||0),0);
+    if(val > 0) porCanal[res.canal] = (porCanal[res.canal]||0) + val;
+  });
+
+  return `
+    <h2 class="section-title">${casa.nome}</h2>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="label">Receita</div>
+        <div class="value">${fmtMoedaCompacta(r.receita)}</div>
+        <div class="sub">${r.reservasCount} reservas</div>
+      </div>
+      <div class="metric">
+        <div class="label">Custos</div>
+        <div class="value">${fmtMoedaCompacta(r.custos)}</div>
+        <div class="sub">manutenção e contas</div>
+      </div>
+      <div class="metric ${r.liquido>=0?'accent-olive':'accent-rust'}">
+        <div class="label">Líquido</div>
+        <div class="value">${fmtMoedaCompacta(r.liquido)}</div>
+        <div class="sub">${r.custos>0 ? (r.custos/Math.max(r.receita,1)*100).toFixed(0)+'% em custos' : '—'}</div>
+      </div>
+      <div class="metric accent-terra">
+        <div class="label">Diárias</div>
+        <div class="value">${r.diarias}</div>
+        <div class="sub">ocupação registrada</div>
+      </div>
+    </div>
+
+    ${mesesOrdenados.length ? `
+    <div class="card">
+      <h3 style="margin:0 0 14px; font-family:'Fraunces',serif; font-size:1.02rem;">Receita por mês</h3>
+      ${mesesOrdenados.map(m => `
+        <div class="rank-row">
+          <div class="rank-name">${fmtMes(m)}</div>
+          <div class="rank-bar-wrap">
+            <div class="rank-bar" style="width:${Math.max(4,(porMes[m]/maxMes*100))}%"></div>
+          </div>
+          <div class="rank-value">${fmtMoedaCompacta(porMes[m])}</div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+
+    ${Object.keys(porCanal).length ? `
+    <div class="card">
+      <h3 style="margin:0 0 14px; font-family:'Fraunces',serif; font-size:1.02rem;">Receita por canal</h3>
+      ${Object.entries(porCanal).sort((a,b)=>b[1]-a[1]).map(([canal,val]) => `
+        <div class="list-item">
+          <div class="who"><span class="channel-tag channel-${canal.toLowerCase()}">${canal}</span></div>
+          <div class="amount">${fmtMoeda(val)}</div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+  `;
+}
+
+// ===================== RENDERIZAÇÃO: RESERVAS =====================
+
+function renderReservas(){
+  if(STATE.casaAtiva === null){
+    return `
+      <div class="empty">
+        <div class="icon">⌂</div>
+        <p><strong>Escolha uma casa</strong></p>
+        <p>Selecione uma casa acima para ver e lançar reservas.</p>
+      </div>
+    `;
+  }
+  const casa = STATE.casas[STATE.casaAtiva];
+  const canais = ['todos','Airbnb','Booking','PIX','Outro'];
+  const lista = reservasDaCasa(STATE.casaAtiva);
+
+  if(casa.reservas.length === 0){
+    return `
+      <h2 class="section-title">${casa.nome}</h2>
+      <div class="empty">
+        <div class="icon">⌂</div>
+        <p><strong>Nenhuma reserva ainda</strong></p>
+        <p>Toque no + para lançar a primeira reserva desta casa.</p>
+      </div>
+    `;
+  }
+
+  let porMes = {};
+  lista.forEach(r => {
+    const key = r.mes || 'sem-mes';
+    if(!porMes[key]) porMes[key] = [];
+    porMes[key].push(r);
+  });
+  const mesesOrdenados = Object.keys(porMes).sort().reverse();
+
+  return `
+    <h2 class="section-title">${casa.nome}</h2>
+    <div class="chip-row">
+      ${canais.map(c => `<button class="chip ${STATE.filtroCanal===c?'active':''}" data-canal="${c}">${c==='todos'?'Todos':c}</button>`).join('')}
+    </div>
+    ${mesesOrdenados.map(mes => `
+      <div class="month-divider">${mes==='sem-mes'?'Sem mês definido':fmtMes(mes)}</div>
+      <div class="card">
+        ${porMes[mes].map(r => {
+          const rec = (casa.recebimentos||[]).find(rec => rec._reservaId === r.id);
+          const totalRec   = (rec?.parcelas||[]).reduce((s,p) => s + (p.valor||0), 0);
+          const totalReceb = (rec?.parcelas||[]).filter(p=>p.status==='recebido').reduce((s,p)=>s+(p.valor||0),0);
+          const pendente   = totalRec - totalReceb;
+          const temPendente = pendente > 0.01;
+          return `
+          <div class="list-item" data-edit-reserva="${r.id}">
+            <div>
+              <div class="who">${r.hospede || '(sem nome)'}</div>
+              <div class="meta">
+                <span class="channel-tag channel-${r.canal.toLowerCase()}">${r.canal}</span>
+                ${r.periodo || ''} · ${r.dias} diária${r.dias==1?'':'s'}
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div class="amount">${totalRec > 0 ? fmtMoeda(totalRec) : '—'}</div>
+              ${temPendente ? `<div style="font-size:.68rem; color:var(--terra-deep); font-weight:600; margin-top:2px;">pend. ${fmtMoedaCompacta(pendente)}</div>` : ''}
+              ${totalRec > 0 && !temPendente ? `<div style="font-size:.68rem; color:var(--olive); font-weight:600; margin-top:2px;">✓ quitado</div>` : ''}
+            </div>
+          </div>
+          `;
+        }).join('')}
+      </div>
+    `).join('')}
+  `;
+}
+
+// ===================== RENDERIZAÇÃO: CUSTOS =====================
+
+function renderCustos(){
+  if(STATE.casaAtiva === null){
+    return `
+      <div class="empty">
+        <div class="icon">✎</div>
+        <p><strong>Escolha uma casa</strong></p>
+        <p>Selecione uma casa acima para ver e lançar custos.</p>
+      </div>
+    `;
+  }
+  const casa = STATE.casas[STATE.casaAtiva];
+  const lista = custosDaCasa(STATE.casaAtiva);
+
+  if(lista.length === 0){
+    return `
+      <h2 class="section-title">${casa.nome}</h2>
+      <div class="empty">
+        <div class="icon">✎</div>
+        <p><strong>Nenhum custo lançado</strong></p>
+        <p>Toque no + para lançar diarista, contas ou manutenção.</p>
+      </div>
+    `;
+  }
+
+  let porMes = {};
+  lista.forEach(c => {
+    const key = (c.data || '').slice(0,7) || 'sem-data';
+    if(!porMes[key]) porMes[key] = [];
+    porMes[key].push(c);
+  });
+  const mesesOrdenados = Object.keys(porMes).sort().reverse();
+
+  return `
+    <h2 class="section-title">${casa.nome}</h2>
+    ${mesesOrdenados.map(mes => `
+      <div class="month-divider">${mes==='sem-data'?'Sem data':fmtMes(mes)}</div>
+      <div class="card">
+        ${porMes[mes].map(c => `
+          <div class="list-item" data-edit-custo="${c.id}">
+            <div>
+              <div class="who">${descricaoCusto(c)}</div>
+              <div class="meta">${fmtData(c.data)}${c.obs ? ' · ' + c.obs : ''}</div>
+            </div>
+            <div class="amount">${fmtMoeda(totalCustoLancamento(c))}</div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('')}
+  `;
+}
+
+function descricaoCusto(c){
+  const itens = [];
+  if(c.diarista) itens.push('Diarista');
+  if(c.luz) itens.push('Luz');
+  if(c.agua) itens.push('Água');
+  if(c.internet) itens.push('Internet');
+  if(c.lavadeira) itens.push('Lavadeira');
+  if(c.produtosLimpeza) itens.push('Produtos de limpeza');
+  if(c.manutencao) itens.push('Manutenção');
+  if(c.outros) itens.push('Outros');
+  return itens.length ? itens.join(' + ') : 'Lançamento de custo';
+}
+
+function renderFab(){
+  return `<button class="btn-fab" id="fab-add">+</button>`;
+}
+
+// ===================== RENDERIZAÇÃO: VALORES A RECEBER =====================
+
+function renderReceber(){
+  const ids = Object.keys(STATE.casas);
+
+  // Se há uma casa ativa, filtra só ela; senão mostra todas
+  const casasFiltro = (STATE.casaAtiva && STATE.casas[STATE.casaAtiva])
+    ? [STATE.casaAtiva]
+    : ids;
+
+  // Coleta todos os recebimentos das casas filtradas
+  const todosRec = casasFiltro.flatMap(casaId =>
+    (STATE.casas[casaId].recebimentos||[]).map(r => ({ ...r, casaId }))
+  );
+
+  const pendentes = todosRec.filter(r => r.parcelas.some(p => p.status==='pendente'));
+  const concluidos = todosRec.filter(r => r.parcelas.every(p => p.status==='recebido'));
+
+  const totalPendente = todosRec.reduce((s,r) =>
+    s + r.parcelas.filter(p=>p.status==='pendente').reduce((ss,p)=>ss+p.valor,0), 0);
+  const totalRecebido = todosRec.reduce((s,r) =>
+    s + r.parcelas.filter(p=>p.status==='recebido').reduce((ss,p)=>ss+p.valor,0), 0);
+
+  return `
+    <h2 class="section-title">Valores a Receber${STATE.casaAtiva ? ' · ' + nomeCurto(STATE.casas[STATE.casaAtiva].nome) : ''}</h2>
+
+    <div class="metric-grid" style="grid-template-columns:repeat(2,1fr);">
+      <div class="metric accent-terra">
+        <div class="label">Pendente</div>
+        <div class="value">${fmtMoedaCompacta(totalPendente)}</div>
+        <div class="sub">ainda a receber</div>
+      </div>
+      <div class="metric accent-olive">
+        <div class="label">Recebido</div>
+        <div class="value">${fmtMoedaCompacta(totalRecebido)}</div>
+        <div class="sub">baixas dadas</div>
+      </div>
+    </div>
+
+    ${pendentes.length === 0 && concluidos.length === 0 ? `
+      <div class="empty">
+        <div class="icon">₿</div>
+        <p><strong>Nenhum recebimento cadastrado</strong></p>
+        <p>Toque no + para cadastrar uma reserva parcelada.</p>
+      </div>
+    ` : ''}
+
+    ${pendentes.length > 0 ? `
+      <div class="month-divider">Em aberto (${pendentes.length})</div>
+      ${pendentes.map(rec => renderCardRecebimento(rec)).join('')}
+    ` : ''}
+
+    ${concluidos.length > 0 ? `
+      <div class="month-divider" style="margin-top:22px;">Concluídos (${concluidos.length})</div>
+      ${concluidos.map(rec => renderCardRecebimento(rec)).join('')}
+    ` : ''}
+  `;
+}
+
+function renderCardRecebimento(rec){
+  const totalParcelas = rec.parcelas.reduce((s,p)=>s+p.valor,0);
+  const totalRecebido = rec.parcelas.filter(p=>p.status==='recebido').reduce((s,p)=>s+p.valor,0);
+  const nomeCasa = STATE.casas[rec.casaId] ? nomeCurto(STATE.casas[rec.casaId].nome) : '';
+
+  return `
+    <div class="receb-card">
+      <div class="receb-head">
+        <div>
+          <div class="receb-hospede">${esc(rec.hospede)}</div>
+          <div class="receb-desc">
+            ${esc(rec.descricao)}
+            ${nomeCasa ? ` · <span class="dot-inline" style="background:${corDaCasa(rec.casaId)}"></span>${nomeCasa}` : ''}
+          </div>
+        </div>
+        <div>
+          <div class="receb-total-val">${fmtMoedaCompacta(totalParcelas)}</div>
+          <div style="font-size:.7rem; color:var(--ink-soft); text-align:right; margin-top:2px;">
+            ${fmtMoedaCompacta(totalRecebido)} recebido
+          </div>
+          <div style="text-align:right; margin-top:6px; display:flex; gap:6px; justify-content:flex-end;">
+            <button class="btn-baixa" style="padding:5px 9px; font-size:.68rem;"
+              data-editar-receb="${rec.id}" data-editar-receb-casa="${rec.casaId}">✎</button>
+            <button class="btn-baixa" style="padding:5px 9px; font-size:.68rem; color:var(--rust);"
+              data-excluir-receb="${rec.id}" data-excluir-receb-casa="${rec.casaId}">✕</button>
+          </div>
+        </div>
+      </div>
+      ${rec.parcelas.map((p,i) => `
+        <div class="parcela-row">
+          <div class="parcela-info">
+            <div style="font-size:.82rem; font-weight:600;">Parcela ${i+1}</div>
+            <div>
+              <span class="badge badge-${p.status}">${p.status==='recebido'?'Recebido':'Pendente'}</span>
+            </div>
+            <div style="font-size:.72rem; color:var(--ink-soft); margin-top:3px;">
+              ${p.status==='recebido'
+                ? 'Recebido em ' + fmtData(p.dataBaixa)
+                : 'Previsto para ' + fmtData(p.dataPrevista)}
+            </div>
+          </div>
+          <div class="parcela-valor">${fmtMoeda(p.valor)}</div>
+          ${p.status==='pendente'
+            ? `<button class="btn-baixa receber"
+                data-baixa-receb="${rec.id}" data-baixa-parcela="${p.id}" data-baixa-casa="${rec.casaId}">
+                ✓ Dar baixa
+               </button>`
+            : `<button class="btn-baixa estornar"
+                data-estornar-receb="${rec.id}" data-estornar-parcela="${p.id}" data-estornar-casa="${rec.casaId}">
+                ↩ Estornar
+               </button>`
+          }
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ===================== RENDERIZAÇÃO: COMPARATIVO (GRÁFICO DE LINHA) =====================
+
+const METRICAS_COMPARAR = {
+  faturamento: { label: 'Faturamento', cor: 'var(--terra)' },
+  custo:       { label: 'Custo',       cor: 'var(--rust)' },
+  lucro:       { label: 'Lucro',       cor: 'var(--olive)' },
+};
+
+function renderComparar(){
+  const todosIds = Object.keys(STATE.casas);
+  if(todosIds.length === 0){
+    return `
+      <h2 class="section-title">Comparar casas</h2>
+      <div class="empty">
+        <div class="icon">∿</div>
+        <p><strong>Nenhuma casa cadastrada</strong></p>
+        <p>Adicione uma casa para começar a comparar.</p>
+      </div>
+    `;
+  }
+
+  const idsAtivos = (STATE.casasComparar && STATE.casasComparar.length)
+    ? STATE.casasComparar.filter(id => STATE.casas[id])
+    : todosIds;
+  const metrica = STATE.metricaComparar;
+  const meses = mesesUnificados(idsAtivos.length ? idsAtivos : todosIds);
+
+  return `
+    <h2 class="section-title">Comparar casas</h2>
+
+    <div class="chip-row">
+      ${Object.keys(METRICAS_COMPARAR).map(m => `
+        <button class="chip ${metrica===m?'active':''}" data-metrica="${m}">${METRICAS_COMPARAR[m].label}</button>
+      `).join('')}
+    </div>
+
+    <div class="chip-row" style="margin-bottom:4px;">
+      ${todosIds.map(id => `
+        <button class="chip casa-toggle-chip ${idsAtivos.includes(id)?'active':''}" data-toggle-casa="${id}"
+          style="${idsAtivos.includes(id)?`background:${corDaCasa(id)}; border-color:${corDaCasa(id)}; color:#fffdf9;`:''}">
+          ${nomeCurto(STATE.casas[id].nome)}
+        </button>
+      `).join('')}
+    </div>
+
+    <div class="card">
+      ${meses.length < 2
+        ? `<div class="empty" style="padding:30px 10px;">
+             <p><strong>Dados insuficientes</strong></p>
+             <p>É preciso pelo menos 2 meses com lançamentos para desenhar a linha do tempo.</p>
+           </div>`
+        : renderGraficoLinha(idsAtivos, meses, metrica)
+      }
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 14px; font-family:'Fraunces',serif; font-size:1.02rem;">${METRICAS_COMPARAR[metrica].label} total no período</h3>
+      ${idsAtivos.map(id => {
+        const serie = serieMensalCasa(id, metrica);
+        const total = Object.values(serie).reduce((s,v)=>s+v,0);
+        return `
+          <div class="list-item">
+            <div class="who"><span class="dot-inline" style="background:${corDaCasa(id)}"></span>${nomeCurto(STATE.casas[id].nome)}</div>
+            <div class="amount" style="color:${metrica==='lucro' && total<0 ? 'var(--rust)' : 'inherit'}">${fmtMoeda(total)}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderGraficoLinha(casaIds, meses, metrica){
+  const W = 720, H = 260;
+  const padL = 50, padR = 16, padT = 16, padB = 34;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  const series = casaIds.map(id => {
+    const s = serieMensalCasa(id, metrica);
+    return { id, valores: meses.map(m => s[m] || 0) };
+  });
+
+  let allValues = series.flatMap(s => s.valores);
+  if(allValues.length === 0) allValues = [0];
+  let max = Math.max(...allValues, 0);
+  let min = Math.min(...allValues, 0);
+  if(max === min){ max = max + 1; min = min - 1; }
+  const range = max - min;
+
+  const xFor = (i) => padL + (meses.length===1 ? innerW/2 : (i/(meses.length-1))*innerW);
+  const yFor = (v) => padT + innerH - ((v-min)/range)*innerH;
+  const yZero = yFor(0);
+
+  // grade horizontal (4 linhas) com rótulo de valor
+  const gridLines = [0,1,2,3,4].map(i => {
+    const v = min + (range*i/4);
+    const y = yFor(v);
+    return `
+      <line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--line)" stroke-width="1" />
+      <text x="${padL-8}" y="${y+3}" text-anchor="end" font-size="9.5" fill="var(--ink-soft)" font-family="Inter">${fmtMoedaEixoY(v)}</text>
+    `;
+  }).join('');
+
+  // linha de zero em destaque, caso esteja no meio da faixa (relevante para lucro negativo)
+  const linhaZero = (min < 0 && max > 0) ? `<line x1="${padL}" y1="${yZero}" x2="${W-padR}" y2="${yZero}" stroke="var(--ink-soft)" stroke-width="1.2" stroke-dasharray="3,3" />` : '';
+
+  const labelsX = meses.map((m,i) => `
+    <text x="${xFor(i)}" y="${H-padB+18}" text-anchor="middle" font-size="9.5" fill="var(--ink-soft)" font-family="Inter">${fmtMesAbrev(m)}</text>
+  `).join('');
+
+  const linhas = series.map(s => {
+    const cor = corDaCasa(s.id);
+    const pontos = s.valores.map((v,i) => `${xFor(i)},${yFor(v)}`).join(' ');
+    const circles = s.valores.map((v,i) => `<circle cx="${xFor(i)}" cy="${yFor(v)}" r="3.4" fill="${cor}" />`).join('');
+    return `<polyline points="${pontos}" fill="none" stroke="${cor}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" />${circles}`;
+  }).join('');
+
+  return `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; display:block;" preserveAspectRatio="xMidYMid meet">
+      ${gridLines}
+      ${linhaZero}
+      ${linhas}
+      ${labelsX}
+    </svg>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px solid var(--paper-deep);">
+      ${casaIds.map(id => `
+        <div style="display:flex; align-items:center; gap:6px; font-size:.74rem; color:var(--ink-soft); font-weight:600;">
+          <span class="dot-inline" style="background:${corDaCasa(id)}; margin-right:0;"></span>${nomeCurto(STATE.casas[id].nome)}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function fmtMesAbrev(mesStr){
+  const [y,m] = mesStr.split('-');
+  const nomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return nomes[parseInt(m,10)-1] + '/' + y.slice(2);
+}
+function fmtMoedaEixoY(v){
+  const abs = Math.abs(v);
+  const sinal = v<0 ? '-' : '';
+  if(abs >= 1000) return sinal + (abs/1000).toLocaleString('pt-BR',{maximumFractionDigits:0}) + 'k';
+  return sinal + abs.toLocaleString('pt-BR',{maximumFractionDigits:0});
+}
+
+// ===================== RENDERIZAÇÃO: CONFIGURAÇÃO =====================
+
+function renderConfig(){
+  const cfg = getConfig();
+  const conectado = !!cfg.scriptUrl;
+  const ids = Object.keys(STATE.casas);
+
+  return `
+    <h2 class="section-title">Configuração</h2>
+
+    <div class="card">
+      <h3 style="margin:0 0 6px; font-family:'Fraunces',serif; font-size:1.02rem;">Casas cadastradas</h3>
+      <p class="helper-text" style="margin-bottom:14px;">
+        Adicione, renomeie ou remova casas. Toda casa nova entra automaticamente no painel e na sincronização.
+      </p>
+      ${ids.map(id => `
+        <div class="list-item" data-gerenciar-casa="${id}">
+          <div class="who"><span class="dot-inline" style="background:${corDaCasa(id)}"></span>${esc(STATE.casas[id].nome)}</div>
+          <div class="meta" style="text-align:right; color:var(--ink-soft);">editar ›</div>
+        </div>
+      `).join('')}
+      <button class="btn btn-ghost btn-block" id="btn-nova-casa-config" style="margin-top:14px;">+ Adicionar casa</button>
+    </div>
+
+    
+
+
+    <div class="card">
+      <h3 style="margin:0 0 6px; font-family:'Fraunces',serif; font-size:1.02rem;">Backup e restauracao</h3>
+      <p class="helper-text" style="margin-bottom:14px;">
+        Exporte um Excel com todos os dados das 5 casas (reservas, custos e recebimentos).
+        Use o mesmo arquivo para restaurar em outro aparelho via Importar.
+      </p>
+      <div class="backup-actions">
+        <button class="btn btn-export" onclick="exportarXLSX()">
+          &#128229; Exportar Excel
+        </button>
+        <button class="btn btn-import" onclick="document.getElementById('input-arquivo').click()">
+          &#128228; Importar Excel
+        </button>
+        <button class="btn btn-deslogar" onclick="deslogar()">
+          &#128274; Deslogar
+        </button>
+      </div>
+      <p class="helper-text" style="margin-top:12px;">
+        <strong>Importar</strong> adiciona registros novos sem apagar os existentes (duplicatas ignoradas por ID).<br>
+        <strong>Deslogar</strong> apaga tudo deste aparelho &mdash; exporte antes.
+      </p>
+    </div>
+
+    
+  `;
+}
+
+const CODIGO_APPS_SCRIPT = `function doGet(e) {
+  var action = e.parameter.action;
+  var aba = e.parameter.aba;
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  if (action === 'read') {
+    return responderJSON(lerAba(ss, aba));
+  }
+
+  if (action === 'write') {
+    var dados = JSON.parse(e.parameter.data);
+    var append = e.parameter.append === 'true';
+    escreverAba(ss, aba, dados, append);
+    return responderJSON({ ok: true });
+  }
+
+  return responderJSON({ erro: 'Ação não reconhecida' });
+}
+
+function lerAba(ss, nomeAba) {
+  var sheet = ss.getSheetByName(nomeAba);
+  if (!sheet) return { linhas: [] };
+  var valores = sheet.getDataRange().getValues();
+  if (valores.length < 2) return { linhas: [] };
+  var cabecalho = valores[0];
+  var linhas = [];
+  for (var i = 1; i < valores.length; i++) {
+    var obj = {};
+    for (var j = 0; j < cabecalho.length; j++) {
+      obj[cabecalho[j]] = valores[i][j];
+    }
+    linhas.push(obj);
+  }
+  return { linhas: linhas };
+}
+
+function escreverAba(ss, nomeAba, linhas, append) {
+  var sheet = ss.getSheetByName(nomeAba);
+  if (!sheet) {
+    sheet = ss.insertSheet(nomeAba);
+  }
+  if (!append) {
+    sheet.clear();
+  }
+  if (linhas.length > 0) {
+    var startRow = append ? sheet.getLastRow() + 1 : 1;
+    sheet.getRange(startRow, 1, linhas.length, linhas[0].length).setValues(linhas);
+  }
+}
+
+function responderJSON(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+function abrirModalCodigo(){
+  modalRoot().innerHTML = `
+    <div class="modal-backdrop open" id="backdrop">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>Código Apps Script</h3>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <p class="helper-text" style="margin-bottom:12px;">
+          1. Abra sua planilha Google → menu <strong>Extensões → Apps Script</strong><br>
+          2. Apague o conteúdo padrão e cole o código abaixo<br>
+          3. Clique em <strong>Implantar → Nova implantação → Web App</strong><br>
+          4. Executar como: <strong>Eu</strong> · Acesso: <strong>Qualquer pessoa</strong><br>
+          5. Copie o link gerado e cole no campo "URL do Apps Script"
+        </p>
+        <pre id="codigo-script" style="background:var(--ink); color:#e8e3d4; padding:14px; border-radius:10px; font-size:.74rem; overflow-x:auto; white-space:pre; line-height:1.5;">${esc(CODIGO_APPS_SCRIPT)}</pre>
+        <button class="btn btn-primary btn-block" id="btn-copiar-codigo" style="margin-top:14px;">Copiar código</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-close').onclick = fecharModal;
+  document.getElementById('backdrop').addEventListener('click', e => { if(e.target.id==='backdrop') fecharModal(); });
+  document.getElementById('btn-copiar-codigo').onclick = async () => {
+    try{
+      await navigator.clipboard.writeText(CODIGO_APPS_SCRIPT);
+      mostrarToast('Código copiado');
+    }catch(e){
+      mostrarToast('Não foi possível copiar automaticamente. Selecione o texto manualmente.');
+    }
+  };
+}
+
+function abrirModalHospedagem(){
+  modalRoot().innerHTML = `
+    <div class="modal-backdrop open" id="backdrop">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>Hospedar no GitHub Pages</h3>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <ol style="font-size:.85rem; line-height:1.7; padding-left:20px; margin:0;">
+          <li>Crie uma conta gratuita em <strong>github.com</strong>, se ainda não tiver</li>
+          <li>Crie um repositório novo, público, com qualquer nome (ex: <code>painel-casas</code>)</li>
+          <li>Faça upload do arquivo HTML deste app, <strong>renomeando exatamente para <code>index.html</code></strong></li>
+          <li>Vá em <strong>Settings → Pages</strong></li>
+          <li>Em "Branch", escolha <strong>main</strong> e clique <strong>Save</strong></li>
+          <li>Em alguns minutos, o link <code>seu-usuario.github.io/painel-casas</code> estará no ar</li>
+        </ol>
+        <p class="helper-text" style="margin-top:14px;">
+          Esse link é o que deve ser acessado no celular — abrir o HTML direto do computador bloqueia a sincronização com a nuvem.
+        </p>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-close').onclick = fecharModal;
+  document.getElementById('backdrop').addEventListener('click', e => { if(e.target.id==='backdrop') fecharModal(); });
+}
+
+function abrirModalNovaCasa(){
+  modalRoot().innerHTML = `
+    <div class="modal-backdrop open" id="backdrop">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>Nova casa</h3>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <form id="form-nova-casa">
+          <div class="field full">
+            <label>Nome da casa</label>
+            <input type="text" name="nome" placeholder="Ex: Casa 04 - Bairro Novo" required autofocus>
+            <div class="helper-text">Esse nome aparece no painel e nas listas de reservas e custos</div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top:18px;">Adicionar casa</button>
+        </form>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-close').onclick = fecharModal;
+  document.getElementById('backdrop').addEventListener('click', e => { if(e.target.id==='backdrop') fecharModal(); });
+  document.getElementById('form-nova-casa').onsubmit = async (e) => {
+    e.preventDefault();
+    const nome = new FormData(e.target).get('nome');
+    const id = await adicionarCasa(nome);
+    fecharModal();
+    if(id){
+      STATE.casaAtiva = id;
+      render();
+      mostrarToast('Casa adicionada');
+    }
+  };
+}
+
+function abrirModalGerenciarCasa(casaId){
+  const casa = STATE.casas[casaId];
+  if(!casa) return;
+  modalRoot().innerHTML = `
+    <div class="modal-backdrop open" id="backdrop">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>Editar casa</h3>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <form id="form-editar-casa">
+          <div class="field full">
+            <label>Nome da casa</label>
+            <input type="text" name="nome" value="${esc(casa.nome)}" required>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:18px;">
+            <button type="button" class="btn btn-ghost" id="btn-excluir-casa">Excluir casa</button>
+            <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-close').onclick = fecharModal;
+  document.getElementById('backdrop').addEventListener('click', e => { if(e.target.id==='backdrop') fecharModal(); });
+  document.getElementById('form-editar-casa').onsubmit = async (e) => {
+    e.preventDefault();
+    const nome = new FormData(e.target).get('nome');
+    await renomearCasa(casaId, nome);
+    fecharModal();
+    render();
+    mostrarToast('Casa atualizada');
+  };
+  document.getElementById('btn-excluir-casa').onclick = async () => {
+    const qtd = casa.reservas.length + casa.custos.length;
+    const aviso = qtd > 0
+      ? `Excluir "${casa.nome}"? Isso apaga ${casa.reservas.length} reserva(s) e ${casa.custos.length} custo(s) lançados nela. Não pode ser desfeito.`
+      : `Excluir "${casa.nome}"?`;
+    if(!confirm(aviso)) return;
+    await removerCasa(casaId);
+    fecharModal();
+    render();
+    mostrarToast('Casa excluída');
+  };
+}
+
+
+// ===================== MODAIS: FORMULÁRIOS =====================
+
+const modalRoot = () => document.getElementById('modal-root');
+
+function abrirModalReserva(reservaExistente){
+  const casaId = STATE.casaAtiva;
+  const casa   = STATE.casas[casaId];
+  const isEdit = !!reservaExistente;
+  const r = reservaExistente || {
+    id: null, mes: mesAtualISO(), hospede:'', periodo:'', dias:'', adultos:'', criancas:'', canal:'Airbnb',
+  };
+
+  // Busca recebimento já vinculado a esta reserva (para edição)
+  const recExistente = isEdit
+    ? (casa.recebimentos||[]).find(rec => rec._reservaId === r.id)
+    : null;
+
+  // parcelas temporárias — começa com 1 vazia (nova) ou com as existentes (edição)
+  let parcelas = recExistente
+    ? recExistente.parcelas.map(p => ({...p}))
+    : [{ id: uid(), label:'Entrada/garantia', valor:'', dataPrevista: r.mes ? r.mes+'-01' : hojeISO(), status:'pendente', dataBaixa:'' }];
+
+  function htmlParcela(p, i){
+    const recebido = p.status === 'recebido';
+    return `
+      <div style="background:var(--paper); border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <div class="field" style="flex:2; min-width:100px; margin-bottom:0;">
+            <label>Descrição</label>
+            <input type="text" value="${esc(p.label||('Parcela '+(i+1)))}" data-p-label="${i}"
+              placeholder="Ex: Entrada, Saldo...">
+          </div>
+          <div class="field" style="flex:1; min-width:80px; margin-bottom:0;">
+            <label>Valor (R$)</label>
+            <input type="number" step="0.01" min="0" value="${p.valor||''}" data-p-valor="${i}">
+          </div>
+          <div class="field" style="flex:1; min-width:110px; margin-bottom:0;">
+            <label>${recebido ? 'Data recebimento' : 'Data prevista'}</label>
+            <input type="date" value="${recebido ? p.dataBaixa : p.dataPrevista}" data-p-data="${i}"
+              ${recebido ? 'disabled style="opacity:.6"' : ''}>
+          </div>
+          <div class="field" style="flex:1; min-width:90px; margin-bottom:0;">
+            <label>Status</label>
+            <select data-p-status="${i}">
+              <option value="pendente" ${!recebido?'selected':''}>Pendente</option>
+              <option value="recebido" ${recebido?'selected':''}>Recebido</option>
+            </select>
+          </div>
+          ${parcelas.length > 1 && !recebido
+            ? `<button type="button" data-p-remover="${i}" style="color:var(--rust); background:none; border:none; font-size:1.1rem; cursor:pointer; padding:4px;">✕</button>`
+            : '<div style="width:24px;"></div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  function montarModal(){
+    modalRoot().innerHTML = `
+      <div class="modal-backdrop open" id="backdrop">
+        <div class="modal">
+          <div class="modal-head">
+            <h3>${isEdit ? 'Editar reserva' : 'Nova reserva'}</h3>
+            <button class="modal-close" id="modal-close">&times;</button>
+          </div>
+          <form id="form-reserva" autocomplete="off">
+
+            <!-- DADOS OPERACIONAIS -->
+            <p style="font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:0 0 10px;">Dados da estadia</p>
+            <div class="form-grid">
+              <div class="field full">
+                <label>Hóspede</label>
+                <input type="text" name="hospede" value="${esc(r.hospede)}" placeholder="Nome do hóspede" required>
+              </div>
+              <div class="field">
+                <label>Mês de referência</label>
+                <input type="month" name="mes" value="${r.mes||''}">
+              </div>
+              <div class="field">
+                <label>Canal</label>
+                <select name="canal">
+                  ${['Airbnb','Booking','PIX','Outro'].map(c=>`<option value="${c}" ${r.canal===c?'selected':''}>${c}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field full">
+                <label>Período (ex: 12 a 15/06)</label>
+                <input type="text" name="periodo" value="${esc(r.periodo)}" placeholder="Datas da estadia">
+              </div>
+              <div class="field">
+                <label>Dias</label>
+                <input type="number" step="1" min="0" name="dias" value="${r.dias}">
+              </div>
+              <div class="field">
+                <label>Adultos</label>
+                <input type="number" step="1" min="0" name="adultos" value="${r.adultos}">
+              </div>
+              <div class="field">
+                <label>Crianças</label>
+                <input type="number" step="1" min="0" name="criancas" value="${r.criancas}">
+              </div>
+            </div>
+
+            <!-- PAGAMENTOS -->
+            <div style="margin:18px 0 10px; display:flex; align-items:center; justify-content:space-between;">
+              <p style="font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:0;">
+                Pagamentos desta reserva
+              </p>
+              <button type="button" id="btn-add-parcela-res" class="btn btn-ghost" style="padding:5px 10px; font-size:.74rem;">+ Parcela</button>
+            </div>
+            <div id="parcelas-res-container">
+              ${parcelas.map((p,i) => htmlParcela(p,i)).join('')}
+            </div>
+            <p class="helper-text" style="margin-top:4px;">
+              Use uma parcela para entrada/garantia e outra para o saldo no check-in. Parcelas com status "Recebido" entram nos totais do painel.
+            </p>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+              ${isEdit ? `<button type="button" class="btn btn-ghost" id="btn-excluir-reserva">Excluir</button>` : ''}
+              <button type="submit" class="btn btn-primary btn-block">${isEdit ? 'Salvar' : 'Lançar reserva'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('modal-close').onclick = fecharModal;
+    document.getElementById('backdrop').addEventListener('click', e => { if(e.target.id==='backdrop') fecharModal(); });
+
+    ligarParcelasReserva();
+
+    document.getElementById('btn-add-parcela-res').onclick = () => {
+      parcelas.push({ id: uid(), label:'Saldo', valor:'', dataPrevista: hojeISO(), status:'pendente', dataBaixa:'' });
+      document.getElementById('parcelas-res-container').innerHTML = parcelas.map(htmlParcela).join('');
+      ligarParcelasReserva();
+    };
+
+    document.getElementById('form-reserva').onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+
+      // Lê parcelas do DOM no momento do submit
+      const parcelasFinais = parcelas.map((p,i) => {
+        const status = document.querySelector(`[data-p-status="${i}"]`)?.value || 'pendente';
+        const dataVal = document.querySelector(`[data-p-data="${i}"]`)?.value || hojeISO();
+        return {
+          id: p.id,
+          label: document.querySelector(`[data-p-label="${i}"]`)?.value?.trim() || ('Parcela '+(i+1)),
+          valor: parseFloat(document.querySelector(`[data-p-valor="${i}"]`)?.value)||0,
+          dataPrevista: status==='recebido' ? p.dataPrevista : dataVal,
+          status,
+          dataBaixa: status==='recebido' ? (p.dataBaixa || dataVal) : '',
+        };
+      }).filter(p => p.valor > 0);
+
+      const novaReserva = {
+        id: isEdit ? r.id : uid(),
+        mes: fd.get('mes') || r.mes,
+        hospede: fd.get('hospede').trim(),
+        periodo: fd.get('periodo').trim(),
+        dias: parseFloat(fd.get('dias'))||0,
+        adultos: parseFloat(fd.get('adultos'))||0,
+        criancas: parseFloat(fd.get('criancas'))||0,
+        canal: fd.get('canal'),
+        valorBruto: 0, taxaLimpeza:0, descontos:0, taxas:0, valorRecebido:0,
+      };
+
+      if(isEdit){
+        const idx = casa.reservas.findIndex(x => x.id === r.id);
+        if(idx > -1) casa.reservas[idx] = novaReserva;
+        // atualiza ou cria o recebimento vinculado
+        if(recExistente){
+          recExistente.hospede  = novaReserva.hospede;
+          recExistente.descricao = novaReserva.periodo || novaReserva.mes;
+          recExistente.parcelas  = parcelasFinais;
+        } else if(parcelasFinais.length > 0){
+          casa.recebimentos = casa.recebimentos || [];
+          casa.recebimentos.push({
+            id: uid(), _reservaId: novaReserva.id,
+            hospede: novaReserva.hospede,
+            descricao: novaReserva.periodo || novaReserva.mes,
+            avulso: false,
+            parcelas: parcelasFinais,
+          });
+        }
+      } else {
+        casa.reservas.push(novaReserva);
+        if(parcelasFinais.length > 0){
+          casa.recebimentos = casa.recebimentos || [];
+          casa.recebimentos.push({
+            id: uid(), _reservaId: novaReserva.id,
+            hospede: novaReserva.hospede,
+            descricao: novaReserva.periodo || novaReserva.mes,
+            avulso: false,
+            parcelas: parcelasFinais,
+          });
+        }
+      }
+
+      await salvarEstado();
+      fecharModal(); render();
+      mostrarToast(isEdit ? 'Reserva atualizada' : 'Reserva lançada');
+    };
+
+    if(isEdit){
+      document.getElementById('btn-excluir-reserva').onclick = async () => {
+        if(!confirm('Excluir reserva e seus pagamentos?')) return;
+        casa.reservas = casa.reservas.filter(x => x.id !== r.id);
+        if(recExistente){
+          casa.recebimentos = (casa.recebimentos||[]).filter(x => x.id !== recExistente.id);
+        }
+        await salvarEstado();
+        fecharModal(); render();
+        mostrarToast('Reserva excluída');
+      };
+    }
+  }
+
+  function ligarParcelasReserva(){
+    document.querySelectorAll('[data-p-remover]').forEach(btn => {
+      btn.onclick = () => {
+        const i = parseInt(btn.getAttribute('data-p-remover'));
+        parcelas.splice(i,1);
+        document.getElementById('parcelas-res-container').innerHTML = parcelas.map(htmlParcela).join('');
+        ligarParcelasReserva();
+      };
+    });
+    // ao mudar status para 'recebido', congela a data e coloca hoje; reverter desgela
+    document.querySelectorAll('[data-p-status]').forEach(sel => {
+      sel.onchange = () => {
+        const i = parseInt(sel.getAttribute('data-p-status'));
+        const dataInput = document.querySelector(`[data-p-data="${i}"]`);
+        if(sel.value === 'recebido'){
+          parcelas[i].dataBaixa = dataInput?.value || hojeISO();
+          parcelas[i].status = 'recebido';
+          if(dataInput){ dataInput.disabled = true; dataInput.style.opacity = '.6'; }
+        } else {
+          parcelas[i].status = 'pendente';
+          parcelas[i].dataBaixa = '';
+          if(dataInput){ dataInput.disabled = false; dataInput.style.opacity = '1'; }
+        }
+      };
+    });
+  }
+
+  montarModal();
+}
+
+function abrirModalCusto(custoExistente){
+  const c = custoExistente || {
+    data: hojeISO(), diarista:'', luz:'', agua:'', internet:'', lavadeira:'',
+    produtosLimpeza:'', manutencao:'', outros:'', obs:'',
+  };
+  const isEdit = !!custoExistente;
+
+  modalRoot().innerHTML = `
+    <div class="modal-backdrop open" id="backdrop">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>${isEdit ? 'Editar custo' : 'Novo custo'}</h3>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <form id="form-custo">
+          <div class="form-grid">
+            <div class="field full">
+              <label>Data</label>
+              <input type="date" name="data" value="${c.data||''}" required>
+            </div>
+            <div class="field">
+              <label>Diarista (R$)</label>
+              <input type="number" step="0.01" min="0" name="diarista" value="${c.diarista}">
+            </div>
+            <div class="field">
+              <label>Luz (R$)</label>
+              <input type="number" step="0.01" min="0" name="luz" value="${c.luz}">
+            </div>
+            <div class="field">
+              <label>Água (R$)</label>
+              <input type="number" step="0.01" min="0" name="agua" value="${c.agua}">
+            </div>
+            <div class="field">
+              <label>Internet (R$)</label>
+              <input type="number" step="0.01" min="0" name="internet" value="${c.internet}">
+            </div>
+            <div class="field">
+              <label>Lavadeira (R$)</label>
+              <input type="number" step="0.01" min="0" name="lavadeira" value="${c.lavadeira}">
+            </div>
+            <div class="field">
+              <label>Produtos de limpeza (R$)</label>
+              <input type="number" step="0.01" min="0" name="produtosLimpeza" value="${c.produtosLimpeza}">
+            </div>
+            <div class="field">
+              <label>Manutenção (R$)</label>
+              <input type="number" step="0.01" min="0" name="manutencao" value="${c.manutencao}">
+            </div>
+            <div class="field">
+              <label>Outros (R$)</label>
+              <input type="number" step="0.01" min="0" name="outros" value="${c.outros}">
+            </div>
+            <div class="field full">
+              <label>Observação (opcional)</label>
+              <input type="text" name="obs" value="${esc(c.obs)}" placeholder="Ex: troca de chuveiro">
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:20px;">
+            ${isEdit ? `<button type="button" class="btn btn-ghost" id="btn-excluir-custo">Excluir</button>` : ''}
+            <button type="submit" class="btn btn-primary btn-block">${isEdit?'Salvar alterações':'Lançar custo'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-close').onclick = fecharModal;
+  document.getElementById('backdrop').addEventListener('click', e => { if(e.target.id==='backdrop') fecharModal(); });
+
+  document.getElementById('form-custo').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const novo = {
+      id: isEdit ? c.id : uid(),
+      data: fd.get('data'),
+      diarista: parseFloat(fd.get('diarista'))||0,
+      luz: parseFloat(fd.get('luz'))||0,
+      agua: parseFloat(fd.get('agua'))||0,
+      internet: parseFloat(fd.get('internet'))||0,
+      lavadeira: parseFloat(fd.get('lavadeira'))||0,
+      produtosLimpeza: parseFloat(fd.get('produtosLimpeza'))||0,
+      manutencao: parseFloat(fd.get('manutencao'))||0,
+      outros: parseFloat(fd.get('outros'))||0,
+      obs: fd.get('obs').trim(),
+    };
+    const casa = STATE.casas[STATE.casaAtiva];
+    if(isEdit){
+      const idx = casa.custos.findIndex(x => x.id === c.id);
+      if(idx>-1) casa.custos[idx] = novo;
+    } else {
+      casa.custos.push(novo);
+    }
+    await salvarEstado();
+    fecharModal();
+    render();
+    mostrarToast(isEdit ? 'Custo atualizado' : 'Custo lançado');
+  };
+
+  if(isEdit){
+    document.getElementById('btn-excluir-custo').onclick = async () => {
+      if(!confirm('Excluir este custo?')) return;
+      const casa = STATE.casas[STATE.casaAtiva];
+      casa.custos = casa.custos.filter(x => x.id !== c.id);
+      await salvarEstado();
+      fecharModal();
+      render();
+      mostrarToast('Custo excluído');
+    };
+  }
+}
+
+function fecharModal(){
+  modalRoot().innerHTML = '';
+}
+
+function abrirModalEditarMeta(casaId){
+  const casa  = STATE.casas[casaId];
+  const meta  = STATE.metas[casaId] || {};
+  const nomeC = casa ? nomeCurto(casa.nome) : casaId;
+  const tmAtual = meta.ticketMedio ? String(meta.ticketMedio) : '';
+
+  modalRoot().innerHTML = `
+    <div class="modal-backdrop open" id="backdrop">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>Definir meta — ${esc(nomeC)}</h3>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <p class="helper-text" style="margin-bottom:16px;">
+          Digite a media de diaria que voce considera boa para esta casa.
+          Esse valor sera usado como referencia para o semaforo no painel.
+        </p>
+        <form id="form-meta">
+          <div class="field full">
+            <label>Meta de ticket medio (R$ por diaria)</label>
+            <input type="number" step="0.01" min="0" name="ticketMedio"
+              value="${esc(tmAtual)}"
+              placeholder="Ex: 250,00"
+              autofocus>
+            <div class="helper-text">
+              Receita media por diaria reservada. Exemplo: se a casa gerou R$ 1.000
+              em uma reserva de 4 diarias, o ticket medio foi R$ 250,00.
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:20px;">
+            ${tmAtual ? `<button type="button" class="btn btn-ghost" id="btn-limpar-meta">Remover meta</button>` : ''}
+            <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-close').onclick = fecharModal;
+  document.getElementById('backdrop').addEventListener('click', e => {
+    if(e.target.id === 'backdrop') fecharModal();
+  });
+
+  const btnLimpar = document.getElementById('btn-limpar-meta');
+  if(btnLimpar){
+    btnLimpar.onclick = () => {
+      if(!STATE.metas[casaId]) STATE.metas[casaId] = {};
+      STATE.metas[casaId].ticketMedio = null;
+      salvarLocal();
+      fecharModal();
+      render();
+      mostrarToast('Meta removida');
+    };
+  }
+
+  document.getElementById('form-meta').onsubmit = (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const tm = parseFloat(fd.get('ticketMedio'));
+    if(!STATE.metas[casaId]) STATE.metas[casaId] = {};
+    STATE.metas[casaId].ticketMedio = isNaN(tm) || tm <= 0 ? null : tm;
+    salvarLocal();
+    fecharModal();
+    render();
+    mostrarToast(STATE.metas[casaId].ticketMedio ? 'Meta salva' : 'Meta removida');
+  };
+}
+
+// Modal de recebimento (novo ou edição)
+function abrirModalRecebimento(casaId, recExistente){
+  const isEdit = !!recExistente;
+  const ids = Object.keys(STATE.casas);
+
+  // estado temporário das parcelas dentro do modal (array de {valor, dataPrevista})
+  let parcelas = isEdit
+    ? recExistente.parcelas.map(p => ({ id:p.id, valor:p.valor, dataPrevista:p.dataPrevista, status:p.status, dataBaixa:p.dataBaixa||'' }))
+    : [{ id:uid(), valor:'', dataPrevista:hojeISO(), status:'pendente', dataBaixa:'' }];
+
+  function montarModal(){
+    modalRoot().innerHTML = `
+      <div class="modal-backdrop open" id="backdrop">
+        <div class="modal">
+          <div class="modal-head">
+            <h3>${isEdit ? 'Editar recebimento' : 'Novo recebimento'}</h3>
+            <button class="modal-close" id="modal-close">&times;</button>
+          </div>
+          <form id="form-receb">
+            <div class="form-grid">
+              <div class="field full">
+                <label>Casa</label>
+                <select name="casaId" id="sel-casa-receb">
+                  ${ids.map(id => `<option value="${id}" ${(casaId||STATE.casaAtiva)===id?'selected':''}>${esc(STATE.casas[id].nome)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field full">
+                <label>Hóspede / Cliente</label>
+                <input type="text" name="hospede" value="${esc(isEdit?recExistente.hospede:'')}" placeholder="Nome do hóspede" required>
+              </div>
+              <div class="field full">
+                <label>Descrição da reserva</label>
+                <input type="text" name="descricao" value="${esc(isEdit?recExistente.descricao:'')}" placeholder="Ex: Reserva julho 2026 — 5 diárias">
+              </div>
+            </div>
+
+            <div style="margin:18px 0 10px; display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);">Parcelas</span>
+              <button type="button" id="btn-add-parcela" class="btn btn-ghost" style="padding:6px 12px; font-size:.76rem;">+ Parcela</button>
+            </div>
+
+            <div id="parcelas-container">
+              ${parcelas.map((p,i) => htmlParcela(p, i)).join('')}
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+              ${isEdit ? `<button type="button" class="btn btn-ghost" id="btn-excluir-receb-modal">Excluir</button>` : ''}
+              <button type="submit" class="btn btn-primary btn-block">${isEdit?'Salvar':'Cadastrar'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    // handlers internos do modal
+    document.getElementById('modal-close').onclick = fecharModal;
+    document.getElementById('backdrop').addEventListener('click', e => { if(e.target.id==='backdrop') fecharModal(); });
+
+    document.getElementById('btn-add-parcela').onclick = () => {
+      parcelas.push({ id:uid(), valor:'', dataPrevista:hojeISO(), status:'pendente', dataBaixa:'' });
+      document.getElementById('parcelas-container').innerHTML = parcelas.map((p,i)=>htmlParcela(p,i)).join('');
+      ligarBotoesRemoverParcela();
+    };
+    ligarBotoesRemoverParcela();
+
+    if(isEdit){
+      document.getElementById('btn-excluir-receb-modal').onclick = async () => {
+        if(!confirm('Excluir este recebimento e todas as parcelas?')) return;
+        const cid = document.getElementById('sel-casa-receb').value;
+        await excluirRecebimento(cid, recExistente.id);
+        fecharModal(); render(); mostrarToast('Recebimento excluído');
+      };
+    }
+
+    document.getElementById('form-receb').onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const cid = fd.get('casaId');
+      // lê parcelas do DOM no momento do submit
+      const parcelasFinais = parcelas.map((p,i) => ({
+        id: p.id,
+        valor: parseFloat(document.querySelector(`[data-parcela-valor="${i}"]`)?.value)||0,
+        dataPrevista: document.querySelector(`[data-parcela-data="${i}"]`)?.value || hojeISO(),
+        status: p.status,
+        dataBaixa: p.dataBaixa,
+      })).filter(p => p.valor > 0);
+
+      if(parcelasFinais.length === 0){ mostrarToast('Informe pelo menos uma parcela com valor'); return; }
+
+      const novoRec = {
+        id: isEdit ? recExistente.id : uid(),
+        hospede: fd.get('hospede').trim(),
+        descricao: fd.get('descricao').trim(),
+        parcelas: parcelasFinais,
+      };
+
+      // se mudou de casa no select, remove da casa antiga (se edit) e adiciona na nova
+      if(!STATE.casas[cid].recebimentos) STATE.casas[cid].recebimentos = [];
+      if(isEdit){
+        const casaOrigem = recExistente._casaId || casaId;
+        if(casaOrigem !== cid){
+          STATE.casas[casaOrigem].recebimentos = (STATE.casas[casaOrigem].recebimentos||[]).filter(r=>r.id!==recExistente.id);
+        } else {
+          const idx = STATE.casas[cid].recebimentos.findIndex(r=>r.id===recExistente.id);
+          if(idx>-1){ STATE.casas[cid].recebimentos[idx] = novoRec; }
+          else STATE.casas[cid].recebimentos.push(novoRec);
+        }
+      } else {
+        STATE.casas[cid].recebimentos.push(novoRec);
+      }
+
+      await salvarEstado();
+      fecharModal(); render(); mostrarToast(isEdit?'Recebimento atualizado':'Recebimento cadastrado');
+    };
+  }
+
+  function htmlParcela(p, i){
+    return `
+      <div class="parcela-row" style="border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+        <div class="parcela-info" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; flex:1;">
+          <div class="field" style="flex:1; min-width:90px; margin-bottom:0;">
+            <label>Valor (R$)</label>
+            <input type="number" step="0.01" min="0" value="${p.valor||''}"
+              data-parcela-valor="${i}" placeholder="0,00">
+          </div>
+          <div class="field" style="flex:1; min-width:130px; margin-bottom:0;">
+            <label>Data prevista</label>
+            <input type="date" value="${p.dataPrevista||''}"
+              data-parcela-data="${i}">
+          </div>
+        </div>
+        ${parcelas.length > 1 ? `<button type="button" class="btn-baixa" style="color:var(--rust);" data-remover-parcela="${i}">✕</button>` : ''}
+      </div>
+    `;
+  }
+
+  function ligarBotoesRemoverParcela(){
+    document.querySelectorAll('[data-remover-parcela]').forEach(btn => {
+      btn.onclick = () => {
+        const i = parseInt(btn.getAttribute('data-remover-parcela'));
+        parcelas.splice(i,1);
+        document.getElementById('parcelas-container').innerHTML = parcelas.map((p,i)=>htmlParcela(p,i)).join('');
+        ligarBotoesRemoverParcela();
+      };
+    });
+  }
+
+  montarModal();
+}
+
+
+function esc(s){
+  if(s===undefined||s===null) return '';
+  return String(s).replace(/"/g,'&quot;');
+}
+
+let toastTimer = null;
+function mostrarToast(msg){
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ===================== EVENTOS =====================
+
+function attachEvents(){
+  document.querySelectorAll('[data-casa]').forEach(el => {
+    el.onclick = () => {
+      const id = el.getAttribute('data-casa');
+      STATE.casaAtiva = id === 'todas' ? null : id;
+      STATE.filtroCanal = 'todos';
+      render();
+    };
+  });
+
+  document.querySelectorAll('nav.bottom button').forEach(el => {
+    el.onclick = () => {
+      STATE.abaAtiva = el.getAttribute('data-aba');
+      render();
+    };
+  });
+
+  document.querySelectorAll('[data-canal]').forEach(el => {
+    el.onclick = () => {
+      STATE.filtroCanal = el.getAttribute('data-canal');
+      render();
+    };
+  });
+
+  document.querySelectorAll('[data-metrica]').forEach(el => {
+    el.onclick = () => {
+      STATE.metricaComparar = el.getAttribute('data-metrica');
+      render();
+    };
+  });
+
+  document.querySelectorAll('[data-toggle-casa]').forEach(el => {
+    el.onclick = () => {
+      const id = el.getAttribute('data-toggle-casa');
+      const todosIds = Object.keys(STATE.casas);
+      let atuais = (STATE.casasComparar && STATE.casasComparar.length) ? STATE.casasComparar.slice() : todosIds.slice();
+      if(atuais.includes(id)){
+        atuais = atuais.filter(x => x !== id);
+      } else {
+        atuais.push(id);
+      }
+      // se ficou vazio ou com todos marcados, volta para "todas" (null) — simplifica o estado
+      if(atuais.length === 0) atuais = todosIds.slice();
+      STATE.casasComparar = (atuais.length === todosIds.length) ? null : atuais;
+      render();
+    };
+  });
+
+  document.querySelectorAll('[data-edit-reserva]').forEach(el => {
+    el.onclick = () => {
+      const id = el.getAttribute('data-edit-reserva');
+      const casa = STATE.casas[STATE.casaAtiva];
+      const r = casa.reservas.find(x => x.id === id);
+      if(r) abrirModalReserva(r);
+    };
+  });
+
+  document.querySelectorAll('[data-edit-custo]').forEach(el => {
+    el.onclick = () => {
+      const id = el.getAttribute('data-edit-custo');
+      const casa = STATE.casas[STATE.casaAtiva];
+      const c = casa.custos.find(x => x.id === id);
+      if(c) abrirModalCusto(c);
+    };
+  });
+
+  const fab = document.getElementById('fab-add');
+  if(fab){
+    fab.onclick = () => {
+      if(STATE.abaAtiva === 'receber'){
+        // na aba receber: abre modal sem exigir casa ativa (o select dentro do modal resolve)
+        const casaDefault = STATE.casaAtiva || Object.keys(STATE.casas)[0] || null;
+        if(!casaDefault){ mostrarToast('Adicione uma casa primeiro'); return; }
+        abrirModalRecebimento(casaDefault, null);
+        return;
+      }
+      if(STATE.casaAtiva === null){
+        mostrarToast('Escolha uma casa primeiro');
+        return;
+      }
+      if(STATE.abaAtiva === 'reservas') abrirModalReserva(null);
+      if(STATE.abaAtiva === 'custos') abrirModalCusto(null);
+    };
+  }
+
+  // Filtro de período — datas manuais
+  const inpIni = document.getElementById('periodo-ini');
+  if(inpIni) inpIni.onchange = () => { STATE.periodoInicio = inpIni.value; render(); };
+  const inpFim = document.getElementById('periodo-fim');
+  if(inpFim) inpFim.onchange = () => { STATE.periodoFim = inpFim.value; render(); };
+
+  // Atalhos de período
+  document.querySelectorAll('[data-atalho-ini]').forEach(el => {
+    el.onclick = () => {
+      STATE.periodoInicio = el.getAttribute('data-atalho-ini');
+      STATE.periodoFim    = el.getAttribute('data-atalho-fim');
+      render();
+    };
+  });
+
+  // Período próprio do card de metas — chips de atalho
+  document.querySelectorAll('[data-meta-periodo-ini]').forEach(el => {
+    el.onclick = () => {
+      STATE.metasPeriodoIni = el.getAttribute('data-meta-periodo-ini');
+      STATE.metasPeriodoFim = el.getAttribute('data-meta-periodo-fim');
+      render();
+    };
+  });
+
+  // Período próprio do card de metas — inputs de data
+  const metaIni = document.getElementById('meta-ini');
+  if(metaIni) metaIni.onchange = () => {
+    STATE.metasPeriodoIni = metaIni.value;
+    if(!STATE.metasPeriodoFim) STATE.metasPeriodoFim = STATE.periodoFim;
+    render();
+  };
+  const metaFim = document.getElementById('meta-fim');
+  if(metaFim) metaFim.onchange = () => {
+    STATE.metasPeriodoFim = metaFim.value;
+    if(!STATE.metasPeriodoIni) STATE.metasPeriodoIni = STATE.periodoInicio;
+    render();
+  };
+
+  // Dar baixa numa parcela
+  document.querySelectorAll('[data-baixa-receb]').forEach(el => {
+    el.onclick = async () => {
+      const casaId = el.getAttribute('data-baixa-casa');
+      const recId  = el.getAttribute('data-baixa-receb');
+      const parId  = el.getAttribute('data-baixa-parcela');
+      await darBaixaParcela(casaId, recId, parId);
+      render();
+      mostrarToast('Baixa registrada');
+    };
+  });
+
+  // Estornar baixa de parcela
+  document.querySelectorAll('[data-estornar-receb]').forEach(el => {
+    el.onclick = async () => {
+      const casaId = el.getAttribute('data-estornar-casa');
+      const recId  = el.getAttribute('data-estornar-receb');
+      const parId  = el.getAttribute('data-estornar-parcela');
+      await estornarBaixaParcela(casaId, recId, parId);
+      render();
+      mostrarToast('Estorno realizado');
+    };
+  });
+
+  // Editar recebimento
+  document.querySelectorAll('[data-editar-receb]').forEach(el => {
+    el.onclick = () => {
+      const casaId = el.getAttribute('data-editar-receb-casa');
+      const recId  = el.getAttribute('data-editar-receb');
+      const rec    = (STATE.casas[casaId].recebimentos||[]).find(r=>r.id===recId);
+      if(rec) abrirModalRecebimento(casaId, {...rec, _casaId: casaId});
+    };
+  });
+
+  // Excluir recebimento (botão ✕ no card)
+  document.querySelectorAll('[data-excluir-receb]').forEach(el => {
+    el.onclick = async () => {
+      const casaId = el.getAttribute('data-excluir-receb-casa');
+      const recId  = el.getAttribute('data-excluir-receb');
+      const rec    = (STATE.casas[casaId].recebimentos||[]).find(r=>r.id===recId);
+      if(!confirm(`Excluir recebimento de "${rec?.hospede||''}"?`)) return;
+      await excluirRecebimento(casaId, recId);
+      render();
+      mostrarToast('Excluído');
+    };
+  });
+
+  // sync bar removida (sincronizacao via Google Sheets nao esta disponivel)
+
+  const btnConectar = document.getElementById('btn-conectar');
+  if(btnConectar){
+    btnConectar.onclick = async () => {
+      const url = document.getElementById('input-script-url').value.trim();
+      if(!url){
+        mostrarToast('Cole a URL do Apps Script primeiro');
+        return;
+      }
+      await conectarPlanilha(url);
+      mostrarToast('Planilha conectada');
+    };
+  }
+
+  const btnSincronizar = document.getElementById('btn-sincronizar');
+  if(btnSincronizar){
+    btnSincronizar.onclick = async () => {
+      await sincronizarAgora();
+      mostrarToast(STATE.sync.status==='erro' ? 'Erro ao sincronizar' : 'Sincronizado com a planilha');
+    };
+  }
+
+  const btnDesconectar = document.getElementById('btn-desconectar');
+  if(btnDesconectar){
+    btnDesconectar.onclick = () => {
+      if(!confirm('Desconectar a planilha? Os dados locais continuam salvos neste aparelho.')) return;
+      desconectarPlanilha();
+      mostrarToast('Planilha desconectada');
+    };
+  }
+
+  const btnVerCodigo = document.getElementById('btn-ver-codigo');
+  if(btnVerCodigo) btnVerCodigo.onclick = abrirModalCodigo;
+
+  const btnVerHospedagem = document.getElementById('btn-ver-hospedagem');
+  if(btnVerHospedagem) btnVerHospedagem.onclick = abrirModalHospedagem;
+
+  const btnNovaCasa = document.getElementById('btn-nova-casa');
+  if(btnNovaCasa) btnNovaCasa.onclick = abrirModalNovaCasa;
+
+  const btnNovaCasaConfig = document.getElementById('btn-nova-casa-config');
+  if(btnNovaCasaConfig) btnNovaCasaConfig.onclick = abrirModalNovaCasa;
+
+  document.querySelectorAll('[data-gerenciar-casa]').forEach(el => {
+    el.onclick = () => {
+      const id = el.getAttribute('data-gerenciar-casa');
+      abrirModalGerenciarCasa(id);
+    };
+  });
+
+  document.querySelectorAll('[data-editar-meta]').forEach(el => {
+    el.onclick = () => {
+      const id = el.getAttribute('data-editar-meta');
+      abrirModalEditarMeta(id);
+    };
+  });
+}
+
+
+// ===================== EXPORT / IMPORT / DESLOGAR =====================
+// Segue o padrao definido no prompt_export_import_xlsx.md
+
+// ---- Mapeamento de abas para export ----
+// Cada aba do XLSX corresponde a uma entidade de uma casa.
+// Estrutura: reservas, custos, recebimentos (parcelas denormalizadas).
+
+function exportarXLSX(){
+  if(typeof XLSX === 'undefined'){
+    mostrarToast('Biblioteca XLSX ainda carregando, tente em 2s');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+
+  Object.keys(STATE.casas).forEach(casaId => {
+    const casa = STATE.casas[casaId];
+    const sufixo = (NOMES_CASA_CURTO[casaId] || casaId).slice(0,20);
+
+    // ---- Aba Reservas ----
+    const hdReservas = ['ID','Mes','Hospede','Periodo','Dias','Adultos','Criancas','Canal'];
+    const linhasReservas = [hdReservas].concat(
+      (casa.reservas||[]).map(r => [
+        String(r.id),        // ID como string (evita notacao cientifica no Excel)
+        r.mes || '',
+        r.hospede || '',
+        r.periodo || '',
+        r.dias || 0,
+        r.adultos || 0,
+        r.criancas || 0,
+        r.canal || '',
+      ])
+    );
+    const wsRes = XLSX.utils.aoa_to_sheet(linhasReservas);
+    XLSX.utils.book_append_sheet(wb, wsRes, ('Res_' + sufixo).slice(0,31));
+
+    // ---- Aba Custos ----
+    const hdCustos = ['ID','Data','Diarista','Luz','Agua','Internet','Lavadeira','ProdutosLimpeza','Manutencao','Outros','Obs'];
+    const linhasCustos = [hdCustos].concat(
+      (casa.custos||[]).map(c => [
+        String(c.id),
+        c.data || '',        // datas sempre como string YYYY-MM-DD
+        c.diarista || 0,
+        c.luz || 0,
+        c.agua || 0,
+        c.internet || 0,
+        c.lavadeira || 0,
+        c.produtosLimpeza || 0,
+        c.manutencao || 0,
+        c.outros || 0,
+        c.obs || '',
+      ])
+    );
+    const wsCus = XLSX.utils.aoa_to_sheet(linhasCustos);
+    XLSX.utils.book_append_sheet(wb, wsCus, ('Cus_' + sufixo).slice(0,31));
+
+    // ---- Aba Recebimentos (parcelas denormalizadas) ----
+    const hdReceb = ['RecID','ReservaID','Hospede','Descricao','Avulso','ParcelaID','Valor','DataPrevista','Status','DataBaixa'];
+    const linhasReceb = [hdReceb].concat(
+      (casa.recebimentos||[]).flatMap(rec =>
+        (rec.parcelas||[]).map(p => [
+          String(rec.id),
+          String(rec._reservaId || ''),
+          rec.hospede || '',
+          rec.descricao || '',
+          rec.avulso ? 'sim' : 'nao',
+          String(p.id),
+          p.valor || 0,
+          p.dataPrevista || '',   // string YYYY-MM-DD
+          p.status || 'pendente',
+          p.dataBaixa || '',      // string YYYY-MM-DD
+        ])
+      )
+    );
+    const wsRec = XLSX.utils.aoa_to_sheet(linhasReceb);
+    XLSX.utils.book_append_sheet(wb, wsRec, ('Rec_' + sufixo).slice(0,31));
+  });
+
+  // Aba-indice de casas
+  const hdCasas = ['ID','Nome'];
+  const linhasCasas = [hdCasas].concat(
+    Object.keys(STATE.casas).map(id => [String(id), STATE.casas[id].nome])
+  );
+  const wsCasas = XLSX.utils.aoa_to_sheet(linhasCasas);
+  XLSX.utils.book_append_sheet(wb, wsCasas, '_Casas');
+
+  const dataHoje = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XLSX.writeFile(wb, 'painel-casas-backup-' + dataHoje + '.xlsx');
+  mostrarToast('Excel exportado com sucesso');
+}
+
+// ---- Import ----
+// Regras:
+// 1. cellDates: false no XLSX.read() — datas chegam como numero serial, convertemos via toDateStr
+// 2. Verificar duplicatas por ID antes de inserir
+// 3. Disparo imediato de sync apos import (nao espera debounce)
+
+function toDateStr(val){
+  // converte numero serial Excel para string YYYY-MM-DD
+  if(!val) return '';
+  if(typeof val === 'string' && val.match(/^\d{4}-\d{2}-\d{2}/)) return val.slice(0,10);
+  if(typeof val === 'number'){
+    // numero serial Excel: dias desde 1900-01-01 (com bug do ano bissexto 1900)
+    const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+    return d.toISOString().slice(0,10);
+  }
+  if(val instanceof Date) return val.toISOString().slice(0,10);
+  return String(val).slice(0,10);
+}
+
+function importarArquivo(){
+  const input = document.getElementById('input-arquivo');
+  const file = input.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try{
+      // cellDates: false -- deixa a conversao para toDateStr()
+      const wb = XLSX.read(e.target.result, { type:'array', cellDates: false });
+      let importados = 0, ignorados = 0;
+
+      // Le aba-indice de casas se existir
+      if(wb.SheetNames.includes('_Casas')){
+        const ws = wb.Sheets['_Casas'];
+        const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+        rows.slice(1).forEach(row => {
+          const [id, nome] = row;
+          if(id && !STATE.casas[id]){
+            STATE.casas[String(id)] = { nome: nome||String(id), reservas:[], custos:[], recebimentos:[] };
+          }
+        });
+      }
+
+      // Para cada casa existente, importa Reservas, Custos e Recebimentos
+      Object.keys(STATE.casas).forEach(casaId => {
+        const sufixo = (NOMES_CASA_CURTO[casaId] || casaId).slice(0,20);
+        const casa = STATE.casas[casaId];
+        const idsExistentes = {
+          reservas:    new Set((casa.reservas||[]).map(r => r.id)),
+          custos:      new Set((casa.custos||[]).map(c => c.id)),
+          recebimentos:new Set((casa.recebimentos||[]).map(r => r.id)),
+        };
+
+        // Reservas
+        const nomeAbaRes = 'Res_' + sufixo;
+        if(wb.SheetNames.some(n => n.startsWith('Res_' + sufixo.slice(0,15)))){
+          const abaRes = wb.SheetNames.find(n => n.startsWith('Res_' + sufixo.slice(0,15)));
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[abaRes], { header:1, defval:'' });
+          rows.slice(1).forEach(row => {
+            const [id, mes, hospede, periodo, dias, adultos, criancas, canal] = row;
+            if(!id) return;
+            if(idsExistentes.reservas.has(String(id))){ ignorados++; return; }
+            casa.reservas.push({
+              id: String(id), mes: String(mes||''), hospede: String(hospede||''),
+              periodo: String(periodo||''), dias: Number(dias)||0,
+              adultos: Number(adultos)||0, criancas: Number(criancas)||0,
+              canal: String(canal||'Outro'), valorBruto:0, taxaLimpeza:0,
+              descontos:0, taxas:0, valorRecebido:0,
+            });
+            idsExistentes.reservas.add(String(id));
+            importados++;
+          });
+        }
+
+        // Custos
+        if(wb.SheetNames.some(n => n.startsWith('Cus_' + sufixo.slice(0,15)))){
+          const abaCus = wb.SheetNames.find(n => n.startsWith('Cus_' + sufixo.slice(0,15)));
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[abaCus], { header:1, defval:'' });
+          rows.slice(1).forEach(row => {
+            const [id, data, diarista, luz, agua, internet, lavadeira, produtosLimpeza, manutencao, outros, obs] = row;
+            if(!id) return;
+            if(idsExistentes.custos.has(String(id))){ ignorados++; return; }
+            casa.custos.push({
+              id: String(id), data: toDateStr(data),
+              diarista: Number(diarista)||0, luz: Number(luz)||0,
+              agua: Number(agua)||0, internet: Number(internet)||0,
+              lavadeira: Number(lavadeira)||0, produtosLimpeza: Number(produtosLimpeza)||0,
+              manutencao: Number(manutencao)||0, outros: Number(outros)||0,
+              obs: String(obs||''),
+            });
+            idsExistentes.custos.add(String(id));
+            importados++;
+          });
+        }
+
+        // Recebimentos (denormalizados -> reagrupar por RecID)
+        if(wb.SheetNames.some(n => n.startsWith('Rec_' + sufixo.slice(0,15)))){
+          const abaRec = wb.SheetNames.find(n => n.startsWith('Rec_' + sufixo.slice(0,15)));
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[abaRec], { header:1, defval:'' });
+          const mapaRec = {};
+          rows.slice(1).forEach(row => {
+            const [recId, reservaId, hospede, descricao, avulso, parcelaId, valor, dataPrevista, status, dataBaixa] = row;
+            if(!recId) return;
+            const recIdStr = String(recId);
+            if(!mapaRec[recIdStr]){
+              mapaRec[recIdStr] = {
+                id: recIdStr,
+                _reservaId: String(reservaId||''),
+                hospede: String(hospede||''),
+                descricao: String(descricao||''),
+                avulso: String(avulso||'') === 'sim',
+                parcelas:[],
+              };
+            }
+            if(parcelaId){
+              mapaRec[recIdStr].parcelas.push({
+                id: String(parcelaId),
+                valor: Number(valor)||0,
+                dataPrevista: toDateStr(dataPrevista),
+                status: String(status||'pendente'),
+                dataBaixa: toDateStr(dataBaixa),
+              });
+            }
+          });
+          // insere somente recebimentos que nao existem
+          Object.values(mapaRec).forEach(rec => {
+            if(idsExistentes.recebimentos.has(rec.id)){ ignorados++; return; }
+            casa.recebimentos.push(rec);
+            idsExistentes.recebimentos.add(rec.id);
+            importados++;
+          });
+        }
+      });
+
+      salvarLocal(); // salva local imediatamente
+      agendarSync(true); // sync imediato (nao debounce) — conforme regra do prompt
+      render();
+      mostrarToast(`Import OK: ${importados} registros inseridos, ${ignorados} duplicatas ignoradas`);
+    }catch(err){
+      console.error('Erro ao importar', err);
+      mostrarToast('Erro ao ler o arquivo: ' + err.message);
+    } finally {
+      input.value = ''; // limpa o input para permitir reimportar o mesmo arquivo
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function deslogar(){
+  if(!confirm('\u26A0\uFE0F Isso vai apagar TODOS os dados deste aparelho.\n\nVoce ja exportou o backup em Excel? Esta acao nao pode ser desfeita.')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+// ===================== INICIALIZAÇÃO =====================
+
+async function init(){
+  root.innerHTML = `<div style="padding:60px 20px; text-align:center;"><div class="loading-bar" style="max-width:200px; margin:0 auto;"></div><p style="margin-top:16px; color:var(--ink-soft); font-size:.85rem;">Carregando painel...</p></div>`;
+  await carregarEstado();
+  carregarMetas();      // carrega metas salvas (editadas manualmente)
+  garantirMetas();      // calcula automático para casas sem meta editada
+  render();
+}
+
+init();
+
+
+
+</script>
+<input type="file" id="input-arquivo" accept=".xlsx,.xls,.csv" style="display:none" onchange="importarArquivo()">
+</body>
+</html>
