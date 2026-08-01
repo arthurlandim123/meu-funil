@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Fluxos de Pagamento — Direcional/Riva</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --green:#1D9E75;
+    --green-dark:#085041;
+    --green-light:#E1F5EE;
+    --bg:#F6F9F8;
+    --surface:#FFFFFF;
+    --surface-2:#F0F5F3;
+    --text:#0F211C;
+    --text-2:#4B615B;
+    --border:#DCEAE5;
+    --danger:#C0392B;
+    --danger-bg:#FDECEA;
+    --warn:#B7791F;
+    --warn-bg:#FEF6E7;
+    --ok-bg:#E1F5EE;
+    --radius:14px;
+    --radius-sm:9px;
+    --shadow:0 1px 3px rgba(8,80,65,0.08), 0 1px 2px rgba(8,80,65,0.06);
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0A1512; --surface:#0F1E1A; --surface-2:#132621;
+      --text:#EAF5F1; --text-2:#9BB8B0; --border:#1D3830;
+      --green:#2CBE8F; --green-dark:#61E0BA; --green-light:#123028;
+      --danger-bg:#3A1512; --warn-bg:#2E2408; --ok-bg:#0F2A22;
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:var(--font); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; padding-bottom:90px;}
+  a{color:inherit;}
+  h1,h2,h3,h4{margin:0 0 4px 0; line-height:1.25;}
+  p{margin:0 0 8px 0;}
+  .muted{color:var(--text-2);}
+
+  header.app-header{position:sticky; top:0; z-index:50; background:linear-gradient(135deg, var(--green-dark), var(--green)); color:#fff; padding:16px 18px 12px 18px;}
+  header.app-header .brand{display:flex; align-items:center; gap:10px;}
+  header.app-header .brand i{font-size:22px;}
+  header.app-header h1{font-size:16px; font-weight:700; letter-spacing:.2px;}
+  header.app-header .sub{font-size:12px; opacity:.85; margin-top:2px;}
+
+  nav.tabs{position:sticky; top:0; z-index:49; display:flex; overflow-x:auto; scrollbar-width:none; background:var(--surface); border-bottom:1px solid var(--border);}
+  nav.tabs::-webkit-scrollbar{display:none;}
+  nav.tabs button{flex:0 0 auto; padding:13px 16px; background:none; border:none; font-family:var(--font); font-size:13.5px; font-weight:600; color:var(--text-2); display:flex; align-items:center; gap:6px; border-bottom:3px solid transparent; cursor:pointer; white-space:nowrap;}
+  nav.tabs button i{font-size:16px;}
+  nav.tabs button.active{color:var(--green-dark); border-bottom-color:var(--green);}
+  @media (prefers-color-scheme: dark){ nav.tabs button.active{color:var(--green);} }
+
+  main{max-width:760px; margin:0 auto; padding:16px 14px 40px 14px;}
+  .panel{display:none;}
+  .panel.active{display:block; animation:fadein .18s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:14px; box-shadow:var(--shadow);}
+  .card h3{font-size:14.5px; color:var(--green-dark); display:flex; align-items:center; gap:8px; margin-bottom:12px;}
+  @media (prefers-color-scheme: dark){ .card h3{color:var(--green);} }
+  .card h3 i{font-size:18px;}
+  .card h3 span{display:flex; align-items:center; gap:8px;}
+  .card .desc{font-size:12.5px; color:var(--text-2); margin-bottom:12px;}
+
+  .export-btn{display:flex; align-items:center; gap:5px; background:var(--green); color:#fff; border:none; font-family:var(--font); font-size:11.5px; font-weight:700; padding:7px 11px; border-radius:99px; cursor:pointer; white-space:nowrap;}
+  .export-btn i{font-size:14px;}
+  .export-btn:active{transform:scale(.96);}
+
+  .link-btn{display:inline-flex; align-items:center; gap:6px; background:var(--green-dark); color:#fff; border:none; font-family:var(--font); font-size:13px; font-weight:700; padding:10px 14px; border-radius:var(--radius-sm); cursor:pointer; text-decoration:none;}
+  .link-btn i{font-size:16px;}
+
+  .home-hero{background:linear-gradient(160deg, var(--green-light), var(--surface) 70%); border:1px solid var(--border); border-radius:var(--radius); padding:20px 16px; margin-bottom:16px;}
+  .home-hero h2{font-size:18px; color:var(--green-dark);}
+  @media (prefers-color-scheme: dark){ .home-hero h2{color:var(--green);} }
+  .home-hero p{font-size:13px; color:var(--text-2);}
+
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px;}
+  .modo-btn{display:flex; flex-direction:column; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 6px; cursor:pointer; font-family:var(--font); text-align:center; color:var(--text);}
+  .modo-btn i{font-size:22px; color:var(--green);}
+  .modo-btn span{font-size:11.5px; font-weight:700;}
+  .modo-btn small{font-size:10px; color:var(--text-2); font-weight:400;}
+
+  .field-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
+  .field{flex:1 1 140px; display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:11.5px; font-weight:600; color:var(--text-2);}
+  .field input, .field select{font-family:var(--font); font-size:14.5px; padding:10px 11px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface-2); color:var(--text); width:100%;}
+  .field input:focus, .field select:focus{outline:2px solid var(--green); outline-offset:1px;}
+  .field input:disabled{opacity:.55; cursor:not-allowed;}
+  .field.pct input{text-align:right;}
+  .field .hint{font-size:10.5px; color:var(--text-2); margin-top:1px;}
+
+  .unit-toggle{display:flex; gap:4px; margin-bottom:2px;}
+  .unit-toggle button{flex:1; font-size:10.5px; font-weight:700; padding:4px 6px; border-radius:6px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-2); cursor:pointer; font-family:var(--font);}
+  .unit-toggle button.active{background:var(--green); color:#fff; border-color:var(--green);}
+  .unit-toggle button:disabled{opacity:.5; cursor:not-allowed;}
+
+  hr.sep{border:none; border-top:1px dashed var(--border); margin:14px 0;}
+
+  .result-big{background:var(--green-light); border-radius:var(--radius-sm); padding:14px; text-align:center; margin-bottom:12px;}
+  .result-big .label{font-size:11.5px; color:var(--green-dark); font-weight:700; text-transform:uppercase; letter-spacing:.4px;}
+  @media (prefers-color-scheme: dark){ .result-big .label{color:var(--green);} }
+  .result-big .value{font-size:24px; font-weight:800; color:var(--text); margin-top:2px;}
+
+  table.flow{width:100%; border-collapse:collapse; font-size:13px;}
+  table.flow th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.3px; color:var(--text-2); padding:6px 8px; border-bottom:1px solid var(--border);}
+  table.flow td{padding:9px 8px; border-bottom:1px solid var(--border);}
+  table.flow td.num{text-align:right; font-variant-numeric:tabular-nums; font-weight:600;}
+  table.flow tr.total td{font-weight:800; color:var(--green-dark); border-top:2px solid var(--border); border-bottom:none;}
+  @media (prefers-color-scheme: dark){ table.flow tr.total td{color:var(--green);} }
+  table.flow tr.sub td{color:var(--text-2); font-weight:400;}
+
+  .badge{display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:4px 9px; border-radius:99px;}
+  .badge.ok{background:var(--ok-bg); color:var(--green-dark);}
+  @media (prefers-color-scheme: dark){ .badge.ok{color:var(--green);} }
+  .badge.warn{background:var(--warn-bg); color:var(--warn);}
+  .badge.danger{background:var(--danger-bg); color:var(--danger);}
+
+  .note-box{background:var(--surface-2); border-left:3px solid var(--green); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:10px 12px; font-size:12px; color:var(--text-2); margin-top:10px;}
+  .note-box b{color:var(--text);}
+  .note-box.warn-box{background:var(--warn-bg); border-left-color:var(--warn); color:var(--text);}
+
+  .error-banner{display:none; background:var(--danger-bg); border:1px solid var(--danger); color:var(--danger); border-radius:var(--radius-sm); padding:10px 12px; font-size:12.5px; margin-bottom:12px;}
+  .error-banner.show{display:block;}
+  .error-banner b{display:flex; align-items:center; gap:6px; margin-bottom:4px;}
+  .error-banner ul{margin:2px 0 0 18px; padding:0;}
+  .error-banner li{margin-bottom:2px;}
+
+  .warn-banner{display:none; background:var(--warn-bg); border:1px solid var(--warn); color:var(--warn); border-radius:var(--radius-sm); padding:10px 12px; font-size:12.5px; margin-bottom:12px;}
+  .warn-banner.show{display:block;}
+  .warn-banner b{display:flex; align-items:center; gap:6px; margin-bottom:4px; color:var(--warn);}
+  .warn-banner ul{margin:2px 0 0 18px; padding:0; color:var(--text);}
+
+  .reminder-banner{background:var(--green-light); border:1px solid var(--green); border-radius:var(--radius-sm); padding:12px 14px; font-size:12.5px; color:var(--text); margin-bottom:14px; display:flex; gap:10px; align-items:flex-start;}
+  .reminder-banner i{color:var(--green-dark); font-size:20px; flex:0 0 auto; margin-top:1px;}
+  @media (prefers-color-scheme: dark){ .reminder-banner i{color:var(--green);} }
+
+  /* ---------- Mesa de vendas (internal-only reajuste analysis) ---------- */
+  .mesa-toggle{width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--surface-2); border:1px dashed var(--warn); color:var(--warn); font-family:var(--font); font-size:12.5px; font-weight:700; padding:11px 12px; border-radius:var(--radius-sm); cursor:pointer; margin-bottom:14px;}
+  .mesa-toggle i.chev{transition:transform .18s ease; margin-left:auto;}
+  .mesa-toggle.open i.chev{transform:rotate(180deg);}
+  .mesa-card{background:repeating-linear-gradient(135deg, var(--warn-bg), var(--warn-bg) 10px, var(--surface) 10px, var(--surface) 20px); border:2px dashed var(--warn); border-radius:var(--radius); padding:16px; margin-bottom:14px;}
+  .mesa-badge{display:inline-flex; align-items:center; gap:6px; background:var(--warn); color:#1a1300; font-size:11px; font-weight:800; padding:5px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.3px; margin-bottom:10px;}
+  .mesa-card h4{font-size:12.5px; color:var(--warn); margin:16px 0 8px 0; text-transform:uppercase; letter-spacing:.3px;}
+  table.mesa-table{width:100%; border-collapse:collapse; font-size:12px; background:var(--surface);}
+  table.mesa-table th{text-align:left; font-size:10px; text-transform:uppercase; color:var(--text-2); padding:6px 8px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface);}
+  table.mesa-table td{padding:7px 8px; border-bottom:1px solid var(--border);}
+  table.mesa-table td.num{text-align:right; font-variant-numeric:tabular-nums; font-weight:600;}
+  .mesa-disclaimer{font-size:11px; color:var(--text-2); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; margin-top:12px;}
+
+  .accordion-item{border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:8px; overflow:hidden;}
+  .accordion-head{display:flex; align-items:center; justify-content:space-between; padding:12px 14px; cursor:pointer; background:var(--surface-2); font-size:13.5px; font-weight:700;}
+  .accordion-head i.chev{transition:transform .18s ease; font-size:16px; color:var(--text-2);}
+  .accordion-item.open .accordion-head i.chev{transform:rotate(180deg);}
+  .accordion-body{max-height:0; overflow:hidden; transition:max-height .22s ease;}
+  .accordion-item.open .accordion-body{max-height:900px;}
+  .accordion-body-inner{padding:12px 14px; font-size:12.5px; color:var(--text-2);}
+  .accordion-body-inner ul{margin:0; padding-left:18px;}
+  .accordion-body-inner li{margin-bottom:5px;}
+
+  table.tiers{width:100%; border-collapse:collapse; font-size:12px; margin-top:8px;}
+  table.tiers th{font-size:10px; text-transform:uppercase; color:var(--text-2); text-align:left; padding:6px 4px; border-bottom:1px solid var(--border);}
+  table.tiers td{padding:7px 4px; border-bottom:1px solid var(--border); vertical-align:middle;}
+  table.tiers td.tier-name{display:flex; align-items:center; gap:6px; font-weight:700; white-space:nowrap;}
+  table.tiers td.tier-name i{font-size:15px;}
+  table.tiers td.num{text-align:center; font-weight:700;}
+  .tier-diamante i{color:#4FB6E8;} .tier-ouro i{color:#D4A017;} .tier-prata i{color:#9AA5AD;}
+  .tier-bronze i{color:#B0703A;} .tier-aco i{color:#6B7280;} .tier-nao i{color:var(--danger);}
+
+  .fab{position:fixed; right:18px; bottom:22px; z-index:60; background:var(--green); color:#fff; border:none; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(8,80,65,.35); cursor:pointer; font-size:22px;}
+  .fab:active{transform:scale(.94);}
+
+  .section-title{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--text-2); margin:18px 0 8px 2px;}
+
+  #printReport{display:none;}
+  #printReport .rep-header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:3px solid #1D9E75; padding-bottom:10px; margin-bottom:18px;}
+  #printReport .rep-header h2{font-size:20px; color:#085041; margin:0;}
+  #printReport .rep-header .rep-sub{font-size:12px; color:#4B615B; margin-top:2px;}
+  #printReport .rep-meta{font-size:11px; color:#4B615B; text-align:right;}
+  #printReport .rep-block{margin-bottom:16px;}
+  #printReport .rep-block h4{font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:#4B615B; margin:0 0 8px 0;}
+  #printReport .rep-hero{background:#E1F5EE; border-radius:10px; padding:14px 16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;}
+  #printReport .rep-hero .l{font-size:11px; color:#085041; font-weight:700; text-transform:uppercase;}
+  #printReport .rep-hero .v{font-size:22px; color:#0F211C; font-weight:800;}
+  #printReport table{width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:6px;}
+  #printReport table th{text-align:left; font-size:10px; text-transform:uppercase; color:#4B615B; padding:6px 4px; border-bottom:1px solid #ccc;}
+  #printReport table td{padding:7px 4px; border-bottom:1px solid #e5e5e5;}
+  #printReport table td.num{text-align:right; font-variant-numeric:tabular-nums; font-weight:600;}
+  #printReport table tr.total td{font-weight:800; border-top:2px solid #999; color:#085041;}
+  #printReport table tr.sub td{color:#777; font-weight:400;}
+  #printReport .rep-notes{font-size:11px; color:#555; background:#f5f5f5; border-left:3px solid #1D9E75; padding:8px 10px; margin-top:14px;}
+  #printReport .rep-badges{display:flex; gap:8px; margin:8px 0 14px 0; flex-wrap:wrap;}
+  #printReport .rep-badge{font-size:11px; font-weight:700; padding:4px 10px; border-radius:99px;}
+  #printReport .rep-badge.ok{background:#E1F5EE; color:#085041;}
+  #printReport .rep-badge.bad{background:#FDECEA; color:#C0392B;}
+  #printReport .rep-footer{margin-top:24px; font-size:10px; color:#999; border-top:1px solid #ddd; padding-top:10px;}
+
+  @media print{
+    @page{ size:A4; margin:16mm 14mm; }
+    header.app-header, nav.tabs, .fab, .no-print{display:none !important;}
+    body{padding:0; background:#fff; color:#000;}
+    body.printing > main{display:none !important;}
+    body.printing #printReport{display:block !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <i class="ti ti-building-skyscraper"></i>
+    <div>
+      <h1>Fluxos de Pagamento</h1>
+      <div class="sub">Direcional/Riva</div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="inicio" class="active"><i class="ti ti-home"></i>Início</button>
+  <button data-tab="direta"><i class="ti ti-building-estate"></i>Direta</button>
+  <button data-tab="investidor"><i class="ti ti-chart-line"></i>Investidor</button>
+  <button data-tab="associativo"><i class="ti ti-hand-click"></i>Associativo</button>
+</nav>
+
+<main>
+
+  <!-- ================= INÍCIO ================= -->
+  <section class="panel active" id="panel-inicio">
+    <div class="home-hero">
+      <h2>Consulte fluxos sem depender do gestor</h2>
+      <p>Escolha a modalidade de pagamento do cliente e simule o fluxo completo — valores, parcelas e reajustes — direto no celular.</p>
+      <div class="grid-3">
+        <div class="modo-btn" data-goto="direta"><i class="ti ti-building-estate"></i><span>Direta</span><small>Obra + pós-obra</small></div>
+        <div class="modo-btn" data-goto="investidor"><i class="ti ti-chart-line"></i><span>Investidor</span><small>100% na obra</small></div>
+        <div class="modo-btn" data-goto="associativo"><i class="ti ti-hand-click"></i><span>Associativo</span><small>Financ. bancário</small></div>
+      </div>
+    </div>
+
+    <div class="section-title">Qual modalidade usar?</div>
+    <div class="accordion" id="acc-modalidades">
+      <div class="accordion-item">
+        <div class="accordion-head"><span><i class="ti ti-building-estate" style="color:var(--green);margin-right:6px;"></i>Tabela Direta</span><i class="ti ti-chevron-down chev"></i></div>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          Cliente paga parte durante a obra (entrada + ato + sinais + parcela-chave + intermediárias) e o restante financiado diretamente com a construtora após a entrega, em até 120x. Fluxo Padrão institucional: 40% obra / 60% pós-obra. A tabela permite ajustar esse percentual para o tipo de produto. Para clientes que não querem financiar pela Caixa e querem tratar direto com a construtora.
+        </div></div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-head"><span><i class="ti ti-chart-line" style="color:var(--green);margin-right:6px;"></i>Tabela Investidor</span><i class="ti ti-chevron-down chev"></i></div>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          Todo o fluxo é quitado durante a obra, sem financiamento pós-chaves. Entrada mais alta (padrão 20%) e sem correção/juros no contrato. Cliente tem acesso a desconto do associativo ou da empresa. Indicado para quem tem o valor todo em banco ou tem um bom fluxo mensal e não gosta de pagar juros ou correção.
+        </div></div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-head"><span><i class="ti ti-hand-click" style="color:var(--green);margin-right:6px;"></i>Associativo</span><i class="ti ti-chevron-down chev"></i></div>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          Cliente financia a maior parte com o banco (associativa), usando desconto associativo + volta de caixa. O saldo não coberto pelo financiamento vira "Valor PS", parcelado e reajustado em até 84x. O enquadramento (Diamante/Ouro/Prata/Bronze/Aço) define os limites de parcelamento e comprometimento de renda. Para clientes que precisam de financiamento do banco da Caixa por ter pouca entrada.
+        </div></div>
+      </div>
+    </div>
+
+    <div class="section-title">Regras de reajuste (todas as modalidades)</div>
+    <div class="card">
+      <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--text-2);">
+        <li><b style="color:var(--text)">Durante a obra:</b> saldo devedor corrigido pelo INCC.</li>
+        <li><b style="color:var(--text)">Pós-obra:</b> saldo devedor corrigido por 1% + IPCA ao mês.</li>
+        <li>Os valores simulados no app <b>não incluem</b> esses reajustes futuros — são valores na data-base de hoje.</li>
+        <li>Na modalidade Direta, o saldo financiado com a construtora pode ser amortizado ou levado para o banco de preferência do cliente.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= DIRETA ================= -->
+  <section class="panel" id="panel-direta">
+    <div class="card">
+      <h3><i class="ti ti-building-estate"></i>Empreendimento e imóvel</h3>
+      <div class="field-row">
+        <div class="field" style="flex:1 1 100%;">
+          <label>Empreendimento</label>
+          <select id="d_produto">
+            <option value="casaprado">Casa Prado / Alentejo</option>
+            <option value="coresdamata">Cores da Mata / Alta Vista</option>
+            <option value="seleto">Seleto</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field" style="flex:1 1 100%;">
+          <label>Descrição do apartamento</label>
+          <input type="text" id="d_desc" value="BL01-0096 · 9º andar · 3 quartos (1 suíte) · 2 vagas">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Valor do imóvel (R$)</label><input type="text" inputmode="decimal" id="d_valor" value="1194700"></div>
+        <div class="field"><label>Descontos (R$)</label><input type="text" inputmode="decimal" id="d_desconto" value="0"></div>
+      </div>
+      <div class="note-box" id="d_produtoInfo">—</div>
+    </div>
+
+    <div class="error-banner" id="d_errors"><b><i class="ti ti-alert-triangle"></i>Simulação fora dos parâmetros do empreendimento</b><ul id="d_errorsList"></ul></div>
+
+    <div class="card">
+      <h3><i class="ti ti-cash"></i>Entrada — Ato e Sinais</h3>
+      <div class="desc">% Entrada é apenas o alvo de referência (ex.: 10% do valor). Distribua livremente entre Ato e Sinais 1, 2 e 3 — dá pra colocar tudo no Ato, ou zerar os sinais que o cliente não vai usar.</div>
+      <div class="field-row">
+        <div class="field pct"><label>% Entrada (alvo)</label><input type="text" inputmode="decimal" id="d_pctEntrada" value="10"></div>
+        <div class="field"><label>Ato (R$)</label><input type="text" inputmode="decimal" id="d_ato" value="5000"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Sinal 1 — 30 dias (R$)</label><input type="text" inputmode="decimal" id="d_sinal1" value="0"></div>
+        <div class="field"><label>Sinal 2 — 60 dias (R$)</label><input type="text" inputmode="decimal" id="d_sinal2" value="0"></div>
+        <div class="field"><label>Sinal 3 — 90 dias (R$)</label><input type="text" inputmode="decimal" id="d_sinal3" value="0"></div>
+      </div>
+      <div class="note-box" id="d_entradaCheck">—</div>
+    </div>
+
+    <div class="card">
+      <h3><i class="ti ti-percentage"></i>Chave e intermediárias</h3>
+      <div class="desc">Clique em % ou R$ para escolher como informar cada valor — a base de cálculo do % é sempre o valor final (já com desconto).</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Chave</label>
+          <div class="unit-toggle" data-target="d_pctChave"><button type="button" class="active" data-unit="pct">%</button><button type="button" data-unit="valor">R$</button></div>
+          <input type="text" inputmode="decimal" id="d_pctChave" value="5">
+          <span class="hint" id="d_pctChaveHint">—</span>
+        </div>
+        <div class="field">
+          <label>Intermediária 1</label>
+          <div class="unit-toggle" data-target="d_pctInterm1"><button type="button" class="active" data-unit="pct">%</button><button type="button" data-unit="valor">R$</button></div>
+          <input type="text" inputmode="decimal" id="d_pctInterm1" value="4">
+          <span class="hint" id="d_pctInterm1Hint">—</span>
+        </div>
+        <div class="field">
+          <label>Intermediária 2</label>
+          <div class="unit-toggle" data-target="d_pctInterm2"><button type="button" class="active" data-unit="pct">%</button><button type="button" data-unit="valor">R$</button></div>
+          <input type="text" inputmode="decimal" id="d_pctInterm2" value="4">
+          <span class="hint" id="d_pctInterm2Hint">—</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Intermediária 3</label>
+          <div class="unit-toggle" data-target="d_pctInterm3"><button type="button" class="active" data-unit="pct">%</button><button type="button" data-unit="valor">R$</button></div>
+          <input type="text" inputmode="decimal" id="d_pctInterm3" value="0">
+          <span class="hint" id="d_pctInterm3Hint">—</span>
+        </div>
+        <div class="field pct"><label>% pago durante a obra</label><input type="text" inputmode="decimal" id="d_pctObra" value="40"><span class="hint" id="d_pctObraHint">mínimo institucional: 40%</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="ti ti-calendar-due"></i>Prazo de obra</h3>
+      <div class="desc">Informe a data de entrega para calcular a quantidade de meses automaticamente — se preferir, ajuste o campo de meses manualmente depois.</div>
+      <div class="field-row">
+        <div class="field"><label>Data de entrega do empreendimento</label><input type="date" id="d_dataEntrega"></div>
+        <div class="field"><label>Meses de parcelamento na obra</label><input type="text" inputmode="numeric" id="d_mesesObra" value="21"><span class="hint" id="d_mesesHint">manual — preencha a data acima p/ calcular</span></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Qtd. parcelas pós-obra</label><input type="text" inputmode="numeric" id="d_qtdPos" value="120"><span class="hint">máximo 120x</span></div>
+      </div>
+    </div>
+
+    <div class="card result-card">
+      <h3 style="justify-content:space-between;">
+        <span><i class="ti ti-report-money"></i>Resultado — <span id="d_descEcho">Fluxo</span></span>
+        <button class="export-btn no-print" data-export="direta"><i class="ti ti-file-download"></i>Exportar A4</button>
+      </h3>
+      <div class="result-big">
+        <div class="label">Parcela mensal pós-obra</div>
+        <div class="value" id="d_out_parcelaPos">—</div>
+      </div>
+      <table class="flow">
+        <thead><tr><th>Item</th><th style="text-align:right">Valor</th></tr></thead>
+        <tbody>
+          <tr><td>Valor final do imóvel</td><td class="num" id="d_out_valorFinal">—</td></tr>
+          <tr><td>Entrada</td><td class="num" id="d_out_entrada">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ Ato — assinatura do contrato</td><td class="num" id="d_out_ato">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ Sinal 1 — 30 dias</td><td class="num" id="d_out_sinal1">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ Sinal 2 — 60 dias</td><td class="num" id="d_out_sinal2">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ Sinal 3 — 90 dias</td><td class="num" id="d_out_sinal3">—</td></tr>
+          <tr><td>Parcela-chave (3 meses antes da entrega)</td><td class="num" id="d_out_chave">—</td></tr>
+          <tr><td>Intermediária 1</td><td class="num" id="d_out_interm1">—</td></tr>
+          <tr><td>Intermediária 2</td><td class="num" id="d_out_interm2">—</td></tr>
+          <tr><td>Intermediária 3</td><td class="num" id="d_out_interm3">—</td></tr>
+          <tr><td>Parcelas mensais durante a obra</td><td class="num" id="d_out_parcelaObra">—</td></tr>
+          <tr class="total"><td>Total pago durante a obra</td><td class="num" id="d_out_totalObra">—</td></tr>
+          <tr class="total"><td>Saldo pós-obra (financiado c/ construtora)</td><td class="num" id="d_out_posObra">—</td></tr>
+        </tbody>
+      </table>
+      <div class="note-box"><b>Atenção:</b> valores na data-base de hoje. Durante a obra incide INCC; pós-obra incide 1% + IPCA sobre o saldo devedor. O saldo financiado com a construtora pode ser amortizado ou levado para o banco de preferência do cliente.</div>
+    </div>
+
+    <button type="button" class="mesa-toggle no-print" id="mesaToggleBtn"><i class="ti ti-lock"></i>Análise interna de reajuste (mesa de vendas)<i class="ti ti-chevron-down chev" id="mesaChev"></i></button>
+
+    <div class="mesa-card no-print" id="mesaCard" style="display:none;">
+      <div class="mesa-badge"><i class="ti ti-eye-off"></i>Uso interno — não enviar ao cliente</div>
+      <h3 style="color:var(--warn);"><i class="ti ti-calculator"></i>Projeção de reajuste (INCC / IPCA)</h3>
+      <div class="desc">Ferramenta de apoio para preparar objeções na mesa de vendas. Os índices abaixo ficam salvos neste aparelho — atualize quando os índices oficiais mudarem. Referência: contrato Casa Prado Residencial Riva — Fase 1 (até o Habite-se) corrigida pelo INCC pro rata die; Fase 2 (após o Habite-se) por IPCA + 1% a.m. via sistema Price, também pro rata die.</div>
+      <div class="field-row">
+        <div class="field pct"><label>INCC-M acumulado 12m (%)</label><input type="text" inputmode="decimal" id="mesa_incc" value="6,40"></div>
+        <div class="field pct"><label>IPCA acumulado 12m (%)</label><input type="text" inputmode="decimal" id="mesa_ipca" value="4,64"></div>
+        <div class="field pct"><label>Spread pós-Habite-se (% a.m.)</label><input type="text" inputmode="decimal" id="mesa_spread" value="1,00"></div>
+      </div>
+      <div class="field-row" style="align-items:center;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--text-2); cursor:pointer;">
+          <input type="checkbox" id="mesa_teto12" style="width:16px; height:16px;">
+          Aplicar teto de 12% a.a. pós-Habite-se (cláusula do "Termo de Ciência" — confirmar com o jurídico se prevalece)
+        </label>
+      </div>
+
+      <h4>Fase 1 — até o Habite-se (INCC) — <span id="mesa_mesesObraEcho">21</span> meses</h4>
+      <table class="mesa-table">
+        <tr><td>Taxa mensal equivalente do INCC</td><td class="num" id="mesa_out_taxaMensalIncc">—</td></tr>
+        <tr><td>% correção acumulada projetada até a entrega</td><td class="num" id="mesa_out_fatorObra">—</td></tr>
+        <tr><td>Parcela-chave projetada corrigida</td><td class="num" id="mesa_out_chaveCorrigida">—</td></tr>
+        <tr><td>Total pago durante a obra — projetado corrigido</td><td class="num" id="mesa_out_totalObraCorrigido">—</td></tr>
+        <tr style="background:var(--warn-bg);"><td><b>Saldo devedor pós-obra corrigido (na entrega)</b></td><td class="num" id="mesa_out_saldoPosCorrigido"><b>—</b></td></tr>
+        <tr style="background:var(--warn-bg);"><td><b>Parcela inicial das Nx já corrigida (na entrega)</b></td><td class="num" id="mesa_out_parcelaPosInicial"><b>—</b></td></tr>
+      </table>
+      <div class="note-box warn-box"><i class="ti ti-info-circle"></i> O saldo devedor pós-obra (as parcelas com a construtora) é corrigido pelo INCC <b>durante toda a obra</b> — não só a fatia paga até a entrega. É esse saldo já corrigido que vira a parcela inicial das Nx, antes mesmo de começar a incidir o reajuste pós-chaves.</div>
+
+      <h4>Fase 2 — após o Habite-se (IPCA + 1% a.m., sistema Price) — primeiros 12 meses</h4>
+      <table class="mesa-table">
+        <tr><td>Taxa mensal equivalente do IPCA</td><td class="num" id="mesa_out_taxaMensalIpca">—</td></tr>
+        <tr><td>Taxa mensal projetada (spread + IPCA)</td><td class="num" id="mesa_out_taxaMensalPos">—</td></tr>
+        <tr id="mesa_row_tetoAplicado" style="display:none;"><td>Taxa mensal efetiva (com teto de 12% a.a.)</td><td class="num" id="mesa_out_taxaMensalEfetiva">—</td></tr>
+        <tr><td>% correção acumulada nos primeiros 12 meses</td><td class="num" id="mesa_out_fatorPos12">—</td></tr>
+        <tr><td>Parcela estimada após 12 meses de reajuste</td><td class="num" id="mesa_out_parcelaPos12">—</td></tr>
+      </table>
+      <div class="note-box warn-box"><i class="ti ti-alert-triangle"></i> O saldo devedor tende a crescer de forma expressiva ao longo das 120 parcelas nesse regime — a expectativa realista é <b>portabilidade para financiamento bancário</b>, não permanência nas 120 parcelas até o fim.</div>
+      <div class="mesa-disclaimer">
+        <b>Metodologia — leia antes de usar na mesa:</b> este painel usa correção mensal composta simplificada (mês cheio). O contrato prevê correção <b>pro rata die</b> (proporcional aos dias) e, na Fase 2, cálculo pelo <b>sistema Price</b> incidindo sobre os valores já corrigidos — os números aqui são uma aproximação direcional, não reproduzem o cálculo exato do banco/construtora.<br><br>
+        <b>Atenção — divergência entre versões do contrato:</b> as Cláusulas Destacadas assinadas eletronicamente trazem uma redação da Cláusula V diferente do corpo principal (Quadro Resumo): incluem rescisão automática se o financiamento bancário não for obtido em até 60 dias da assinatura, e mencionam uma "Cobrança Mensal" (juros de obra/prestação habitacional) cobrada pelo banco financiador durante a construção. Confirme com o jurídico da Direcional qual versão prevalece antes de usar isso como argumento com o cliente.
+      </div>
+
+      <h4>Mês a mês — obra (parcela projetada com INCC)</h4>
+      <div style="max-height:260px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm);">
+        <table class="mesa-table" id="mesa_tableObra"><thead><tr><th>Mês</th><th style="text-align:right">% acum.</th><th style="text-align:right">Parcela projetada</th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <h4>Mês a mês — pós-obra (parcela já corrigida pelo INCC, + spread e IPCA mês a mês)</h4>
+      <div style="max-height:260px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm);">
+        <table class="mesa-table" id="mesa_tablePos"><thead><tr><th>Mês</th><th style="text-align:right">% acum.</th><th style="text-align:right">Parcela projetada</th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div class="mesa-disclaimer">
+        Esta é uma <b>projeção</b> baseada na manutenção do ritmo atual dos índices — não é uma garantia contratual. O valor oficial de reajuste só é apurado mês a mês pela FGV (INCC) / IBGE (IPCA), e a simulação oficial do banco/construtora sempre prevalece sobre esta estimativa.
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INVESTIDOR ================= -->
+  <section class="panel" id="panel-investidor">
+    <div class="card">
+      <h3><i class="ti ti-chart-line"></i>Empreendimento e imóvel</h3>
+      <div class="field-row">
+        <div class="field" style="flex:1 1 100%;">
+          <label>Empreendimento</label>
+          <select id="i_produto">
+            <option value="casaprado">Casa Prado / Alentejo</option>
+            <option value="coresdamata">Cores da Mata / Alta Vista</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field" style="flex:1 1 100%;">
+          <label>Descrição do apartamento</label>
+          <input type="text" id="i_desc" value="BL01-0094 · 9º andar · 2 suítes · 1 vaga">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Valor do imóvel (R$)</label><input type="text" inputmode="decimal" id="i_valor" value="930700"></div>
+        <div class="field"><label>Descontos (R$)</label><input type="text" inputmode="decimal" id="i_desconto" value="0"></div>
+      </div>
+      <div class="note-box" id="i_produtoInfo">—</div>
+    </div>
+
+    <div class="error-banner" id="i_errors"><b><i class="ti ti-alert-triangle"></i>Simulação fora dos parâmetros do empreendimento</b><ul id="i_errorsList"></ul></div>
+
+    <div class="card">
+      <h3><i class="ti ti-percentage"></i>Percentuais do fluxo (100% na obra)</h3>
+      <div class="desc">Clique em % ou R$ para escolher como informar Chave/Intermediárias — a base de cálculo do % é sempre o valor final (já com desconto).</div>
+      <div class="field-row">
+        <div class="field pct"><label>% Entrada</label><input type="text" inputmode="decimal" id="i_pctEntrada" value="20"></div>
+        <div class="field">
+          <label>Chave</label>
+          <div class="unit-toggle" data-target="i_pctChave"><button type="button" class="active" data-unit="pct">%</button><button type="button" data-unit="valor">R$</button></div>
+          <input type="text" inputmode="decimal" id="i_pctChave" value="5">
+          <span class="hint" id="i_pctChaveHint">—</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Intermediária 1</label>
+          <div class="unit-toggle" data-target="i_pctInterm1"><button type="button" class="active" data-unit="pct">%</button><button type="button" data-unit="valor">R$</button></div>
+          <input type="text" inputmode="decimal" id="i_pctInterm1" value="4">
+          <span class="hint" id="i_pctInterm1Hint">—</span>
+        </div>
+        <div class="field">
+          <label>Intermediária 2</label>
+          <div class="unit-toggle" data-target="i_pctInterm2"><button type="button" class="active" data-unit="pct">%</button><button type="button" data-unit="valor">R$</button></div>
+          <input type="text" inputmode="decimal" id="i_pctInterm2" value="4">
+          <span class="hint" id="i_pctInterm2Hint">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="ti ti-calendar-due"></i>Prazo de obra</h3>
+      <div class="desc">Informe a data de entrega para calcular a quantidade de meses automaticamente — se preferir, ajuste o campo de meses manualmente depois.</div>
+      <div class="field-row">
+        <div class="field"><label>Data de entrega do empreendimento</label><input type="date" id="i_dataEntrega"></div>
+        <div class="field"><label>Meses de obra restantes</label><input type="text" inputmode="numeric" id="i_mesesObra" value="21"><span class="hint" id="i_mesesHint">manual — preencha a data acima p/ calcular</span></div>
+      </div>
+    </div>
+
+    <div class="card result-card">
+      <h3 style="justify-content:space-between;">
+        <span><i class="ti ti-report-money"></i>Resultado — <span id="i_descEcho">Fluxo</span></span>
+        <button class="export-btn no-print" data-export="investidor"><i class="ti ti-file-download"></i>Exportar A4</button>
+      </h3>
+      <div class="result-big">
+        <div class="label">Parcela mensal durante a obra</div>
+        <div class="value" id="i_out_parcela">—</div>
+      </div>
+      <table class="flow">
+        <thead><tr><th>Item</th><th style="text-align:right">Valor</th></tr></thead>
+        <tbody>
+          <tr><td>Valor final do imóvel</td><td class="num" id="i_out_valorFinal">—</td></tr>
+          <tr><td>Entrada</td><td class="num" id="i_out_entrada">—</td></tr>
+          <tr><td>Parcela-chave</td><td class="num" id="i_out_chave">—</td></tr>
+          <tr><td>Intermediária 1</td><td class="num" id="i_out_interm1">—</td></tr>
+          <tr><td>Intermediária 2</td><td class="num" id="i_out_interm2">—</td></tr>
+          <tr class="total"><td>Total parcelado na obra</td><td class="num" id="i_out_total">—</td></tr>
+        </tbody>
+      </table>
+      <div class="note-box"><b>Sem correção:</b> contrato durante a obra não sofre reajuste ou juros. Documento é quitado na entrega das chaves. Cliente tem acesso a desconto do associativo ou da empresa.</div>
+    </div>
+  </section>
+
+  <!-- ================= ASSOCIATIVO ================= -->
+  <section class="panel" id="panel-associativo">
+    <div class="reminder-banner"><i class="ti ti-info-circle"></i><div>Esta modalidade só pode ser vendida para os empreendimentos <b>Seleto</b>, <b>Cores da Mata</b> e <b>Alta Vista</b>.</div></div>
+
+    <div class="card">
+      <h3><i class="ti ti-hand-click"></i>Empreendimento, imóvel e cliente</h3>
+      <div class="field-row">
+        <div class="field" style="flex:1 1 100%;">
+          <label>Empreendimento</label>
+          <select id="a_produto">
+            <option value="seleto">Seleto</option>
+            <option value="coresdamata">Cores da Mata</option>
+            <option value="altavista">Alta Vista</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Valor do imóvel (R$)</label><input type="text" inputmode="decimal" id="a_valor" value="454700"></div>
+        <div class="field"><label>Avaliação do imóvel (R$)</label><input type="text" inputmode="decimal" id="a_avaliacao" value="462000"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Enquadramento do cliente</label>
+          <select id="a_tier">
+            <option value="diamante">💎 Diamante</option>
+            <option value="ouro">🏆 Ouro</option>
+            <option value="prata">🥈 Prata</option>
+            <option value="bronze">🥉 Bronze</option>
+            <option value="aco">⚙️ Aço</option>
+            <option value="nao">🚫 Não elegível</option>
+          </select>
+        </div>
+        <div class="field"><label>Renda familiar (R$)</label><input type="text" inputmode="decimal" id="a_renda" value="8000"></div>
+      </div>
+      <table class="tiers">
+        <thead><tr><th>Categoria</th><th style="text-align:center">Prosoluto</th><th style="text-align:center">Comprometimento</th></tr></thead>
+        <tbody id="tiersRefBody"></tbody>
+      </table>
+    </div>
+
+    <div class="error-banner" id="a_errors"><b><i class="ti ti-alert-triangle"></i>Simulação fora dos parâmetros</b><ul id="a_errorsList"></ul></div>
+    <div class="warn-banner" id="a_warns"><b><i class="ti ti-alert-circle"></i>Atenção</b><ul id="a_warnsList"></ul></div>
+
+    <div class="card">
+      <h3><i class="ti ti-percentage"></i>Desconto associativo</h3>
+      <div class="desc">% varia conforme campanha vigente — confirme com o gestor antes de repassar ao cliente.</div>
+      <div class="field-row">
+        <div class="field pct"><label>% Desconto associativo</label><input type="text" inputmode="decimal" id="a_pctDesconto" value="7"></div>
+        <div class="field"><label>Volta de caixa (R$)</label><input type="text" inputmode="decimal" id="a_voltaCaixa" value="20000"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="ti ti-building-bank"></i>Financiamento bancário</h3>
+      <div class="field-row">
+        <div class="field" style="flex:1 1 100%;">
+          <a class="link-btn" href="https://simuladorhabitacao.caixa.gov.br/calculadora" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Clique para simular financiamento na Caixa</a>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Valor aprovado no financiamento (R$)</label><input type="text" inputmode="decimal" id="a_resultadoAnalise" value="318551,93"></div>
+        <div class="field"><label>Parcela informada pelo simulador (R$)</label><input type="text" inputmode="decimal" id="a_parcelaCaixa" value="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Sistema de amortização (referência)</label>
+          <select id="a_sistemaAmort" class="notranslate" translate="no">
+            <option value="SAC" class="notranslate">SAC</option>
+            <option value="Price" class="notranslate">Tabela Price</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="ti ti-cash"></i>Sinais e entrada</h3>
+      <div class="field-row">
+        <div class="field"><label>Ato (R$)</label><input type="text" inputmode="decimal" id="a_ato" value="3500"><span class="hint" id="a_atoHint">mínimo: R$ 3.500,00</span></div>
+        <div class="field"><label>Sinal 1 — 30 dias (R$)</label><input type="text" inputmode="decimal" id="a_sinal1" value="1000"></div>
+        <div class="field"><label>Sinal 2 — 60 dias (R$)</label><input type="text" inputmode="decimal" id="a_sinal2" value="1000"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Sinal 3 — 90 dias (R$)</label><input type="text" inputmode="decimal" id="a_sinal3" value="0"></div>
+        <div class="field"><label>FGTS (R$)</label><input type="text" inputmode="decimal" id="a_fgts" value="0"></div>
+        <div class="field"><label>Anual (R$)</label><input type="text" inputmode="decimal" id="a_anual" value="0"></div>
+      </div>
+      <div class="note-box warn-box"><b>Lembrete:</b> a parcela anual deve ser no máximo 50% da renda do cliente e deve ser utilizada em último caso.</div>
+    </div>
+
+    <div class="card">
+      <h3><i class="ti ti-adjustments-horizontal"></i>Parâmetros de reajuste</h3>
+      <div class="field-row">
+        <div class="field pct"><label>Taxa mensal (travada p/ empreendimento)</label><input type="text" inputmode="decimal" id="a_taxa" value="0,64" disabled></div>
+        <div class="field"><label>Qtd. parcelas</label><input type="text" inputmode="numeric" id="a_qtdParcelas" value="84"><span class="hint">máximo 84x</span></div>
+      </div>
+    </div>
+
+    <div class="card result-card">
+      <h3 style="justify-content:space-between;">
+        <span><i class="ti ti-report-money"></i>Resultado</span>
+        <button class="export-btn no-print" data-export="associativo"><i class="ti ti-file-download"></i>Exportar A4</button>
+      </h3>
+      <table class="flow">
+        <thead><tr><th>Item</th><th style="text-align:right">Valor</th></tr></thead>
+        <tbody>
+          <tr><td>Valor do imóvel</td><td class="num" id="a_out_valorImovel">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ Desconto associativo</td><td class="num" id="a_out_desconto">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ Volta de caixa</td><td class="num" id="a_out_voltaCaixa">—</td></tr>
+          <tr class="total"><td>Valor final do imóvel</td><td class="num" id="a_out_valorFinal">—</td></tr>
+          <tr><td>Saldo não financiado pelo banco</td><td class="num" id="a_out_saldo">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ Ato</td><td class="num" id="a_out_ato">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ Sinal 1 / 2 / 3</td><td class="num" id="a_out_sinais">—</td></tr>
+          <tr class="sub"><td>&nbsp;&nbsp;↳ FGTS / Anual</td><td class="num" id="a_out_fgtsAnual">—</td></tr>
+          <tr class="total"><td>Valor PS</td><td class="num" id="a_out_valorPS">—</td></tr>
+          <tr><td>Parcela sem reajuste (referência)</td><td class="num" id="a_out_parcelaSemReajuste">—</td></tr>
+          <tr><td>Valor OS ajustado (projetado)</td><td class="num" id="a_out_osAjustado">—</td></tr>
+          <tr class="total"><td>Parcela ajustada (com reajuste)</td><td class="num" id="a_out_parcelaAjustada">—</td></tr>
+          <tr><td>Valor financiado pela Caixa</td><td class="num" id="a_out_valorFinanciado">—</td></tr>
+          <tr class="total"><td>Parcela financiamento Caixa (<span id="a_out_sistemaAmort" class="notranslate">SAC</span>)</td><td class="num" id="a_out_parcelaCaixa">—</td></tr>
+        </tbody>
+      </table>
+      <hr class="sep">
+      <div class="field-row" style="margin-bottom:6px;">
+        <div class="field"><span class="hint">% PS sobre valor final</span><div style="font-weight:700;font-size:15px;" id="a_check_ps">—</div></div>
+        <div class="field"><span class="hint">Parcela ÷ renda familiar</span><div style="font-weight:700;font-size:15px;" id="a_check_renda">—</div></div>
+      </div>
+      <div id="a_badges" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      <div class="note-box"><b>Referência de enquadramento (<span id="a_tierEcho">Diamante</span>):</b> limite prosoluto <span id="a_tierLimitePS">—</span> · limite de comprometimento de renda <span id="a_tierLimiteRenda">—</span>.</div>
+    </div>
+  </section>
+
+</main>
+
+<div id="printReport"></div>
+
+<button class="fab no-print" id="printBtn" title="Exportar / Imprimir"><i class="ti ti-printer"></i></button>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Helpers ----------
+  function toNum(v){
+    if (typeof v !== "string") return Number(v)||0;
+    v = v.replace(/\./g,"").replace(",",".").replace(/[^\d.\-]/g,"");
+    var n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+  function getVal(id){ var el = document.getElementById(id); return el ? toNum(el.value) : 0; }
+  function fmtBRL(n){ if (isNaN(n)) n = 0; return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
+  function fmtPct(n){ return (n*100).toLocaleString('pt-BR', {maximumFractionDigits:1}) + '%'; }
+  function set(id, text){ var el = document.getElementById(id); if(el) el.textContent = text; }
+  function setDisabled(id, disabled, val){ var el = document.getElementById(id); if(!el) return; el.disabled = disabled; if (val !== undefined) el.value = (typeof val === 'number') ? String(val).replace('.', ',') : val; }
+
+  // ---------- Tabs ----------
+  var tabs = document.querySelectorAll('nav.tabs button');
+  tabs.forEach(function(btn){ btn.addEventListener('click', function(){ activateTab(btn.dataset.tab); }); });
+  document.querySelectorAll('.modo-btn').forEach(function(btn){ btn.addEventListener('click', function(){ activateTab(btn.dataset.goto); }); });
+  function activateTab(name){
+    tabs.forEach(function(b){ b.classList.toggle('active', b.dataset.tab === name); });
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.toggle('active', p.id === 'panel-' + name); });
+    window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+  }
+
+  // ---------- Accordion ----------
+  document.querySelectorAll('.accordion-head').forEach(function(head){
+    head.addEventListener('click', function(){ head.parentElement.classList.toggle('open'); });
+  });
+
+  // ---------- Attach live recalculation ----------
+  function watch(ids, fn){
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.addEventListener('input', fn);
+      if(el && el.tagName === 'SELECT') el.addEventListener('change', fn);
+    });
+  }
+
+  // ---------- Data → meses helper ----------
+  function monthsBetween(dataStr){
+    if (!dataStr) return null;
+    var hoje = new Date();
+    var alvo = new Date(dataStr + 'T00:00:00');
+    if (isNaN(alvo.getTime())) return null;
+    var diff = (alvo.getFullYear() - hoje.getFullYear()) * 12 + (alvo.getMonth() - hoje.getMonth());
+    if (alvo.getDate() < hoje.getDate()) diff -= 1;
+    return diff;
+  }
+
+  // ---------- Unit toggle (% / R$) helpers ----------
+  function getUnitToggle(targetId){ return document.querySelector('.unit-toggle[data-target="' + targetId + '"]'); }
+  function getUnit(targetId){
+    var g = getUnitToggle(targetId);
+    if (!g) return 'pct';
+    var active = g.querySelector('button.active');
+    return active ? active.dataset.unit : 'pct';
+  }
+  function setUnit(targetId, unit){
+    var g = getUnitToggle(targetId);
+    if (!g) return;
+    g.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b.dataset.unit === unit); });
+  }
+  function setUnitDisabled(targetId, disabled){
+    var g = getUnitToggle(targetId);
+    if (!g) return;
+    g.querySelectorAll('button').forEach(function(b){ b.disabled = disabled; });
+  }
+  function resolveAmt(targetId, base){
+    var unit = getUnit(targetId);
+    var raw = getVal(targetId);
+    return unit === 'pct' ? (raw/100) * base : raw;
+  }
+  function effectivePct(amt, base){ return base !== 0 ? amt / base : 0; }
+  function updateHint(targetId, hintId, base){
+    var hintEl = document.getElementById(hintId);
+    if (!hintEl) return;
+    var unit = getUnit(targetId);
+    var raw = getVal(targetId);
+    if (unit === 'pct'){ hintEl.textContent = '= ' + fmtBRL((raw/100) * base); }
+    else { hintEl.textContent = base !== 0 ? '= ' + fmtPct(raw/base) + ' do valor final' : '—'; }
+  }
+  function getBaseForField(targetId){
+    if (targetId.indexOf('d_') === 0) return getVal('d_valor') - getVal('d_desconto');
+    if (targetId.indexOf('i_') === 0) return getVal('i_valor') - getVal('i_desconto');
+    return 0;
+  }
+  document.querySelectorAll('.unit-toggle button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if (btn.disabled) return;
+      var group = btn.parentElement;
+      var targetId = group.dataset.target;
+      var newUnit = btn.dataset.unit;
+      var oldUnit = getUnit(targetId);
+      if (newUnit === oldUnit) return;
+      var base = getBaseForField(targetId);
+      var raw = getVal(targetId);
+      var novo = (newUnit === 'pct') ? (base !== 0 ? (raw/base)*100 : 0) : (raw/100) * base;
+      document.getElementById(targetId).value = novo.toFixed(2).replace('.', ',');
+      setUnit(targetId, newUnit);
+      if (targetId.indexOf('d_') === 0) calcDireta();
+      else if (targetId.indexOf('i_') === 0) calcInvestidor();
+    });
+  });
+
+  // ======================================================
+  // DIRETA
+  // ======================================================
+  var DIRETA_PRODUTOS = {
+    casaprado:   {label:'Casa Prado / Alentejo',      atoMin:5000, pctObraMin:0.35, pctObraDefault:0.40, pctChaveMax:0.05, pctIntermMax:0.04,  qtdPosMax:120, permite:true},
+    coresdamata: {label:'Cores da Mata / Alta Vista',  atoMin:3500, pctObraMin:0.40, pctObraDefault:0.40, pctChaveMax:0.04, pctIntermMax:0.025, qtdPosMax:120, permite:true},
+    seleto:      {label:'Seleto',                      atoMin:1500, pctObraMin:0.40, pctObraDefault:0.40, pctChaveMax:0,    pctIntermMax:0,     qtdPosMax:120, permite:false}
+  };
+
+  function getDiretaProduto(){ return DIRETA_PRODUTOS[document.getElementById('d_produto').value]; }
+
+  function aplicarProdutoDireta(){
+    var p = getDiretaProduto();
+    setDisabled('d_ato', false, p.atoMin);
+    setDisabled('d_pctObra', false, (p.pctObraDefault*100));
+    document.getElementById('d_pctObraHint').textContent = 'mínimo institucional: ' + (p.pctObraMin*100) + '%';
+    if (p.permite){
+      setUnit('d_pctChave', 'pct'); setUnitDisabled('d_pctChave', false); setDisabled('d_pctChave', false, (p.pctChaveMax*100));
+      setUnit('d_pctInterm1', 'pct'); setUnitDisabled('d_pctInterm1', false); setDisabled('d_pctInterm1', false, (p.pctIntermMax*100));
+      setUnit('d_pctInterm2', 'pct'); setUnitDisabled('d_pctInterm2', false); setDisabled('d_pctInterm2', false, (p.pctIntermMax*100));
+      setUnit('d_pctInterm3', 'pct'); setUnitDisabled('d_pctInterm3', false); setDisabled('d_pctInterm3', false, 0);
+    } else {
+      setUnit('d_pctChave', 'pct'); setUnitDisabled('d_pctChave', true); setDisabled('d_pctChave', true, 0);
+      setUnit('d_pctInterm1', 'pct'); setUnitDisabled('d_pctInterm1', true); setDisabled('d_pctInterm1', true, 0);
+      setUnit('d_pctInterm2', 'pct'); setUnitDisabled('d_pctInterm2', true); setDisabled('d_pctInterm2', true, 0);
+      setUnit('d_pctInterm3', 'pct'); setUnitDisabled('d_pctInterm3', true); setDisabled('d_pctInterm3', true, 0);
+    }
+    document.getElementById('d_produtoInfo').innerHTML = '<b>' + p.label + ':</b> ato mínimo ' + fmtBRL(p.atoMin) + ' · fluxo mínimo ' + (p.pctObraMin*100) + '% obra / ' + (100-p.pctObraMin*100) + '% pós-obra em até ' + p.qtdPosMax + 'x' +
+      (p.permite ? ' · chave máx. ' + (p.pctChaveMax*100) + '% · intermediárias máx. ' + (p.pctIntermMax*100).toString().replace('.', ',') + '%' : ' · não aceita parcela-chave nem intermediárias — apenas parcelas mensais.');
+    calcDireta();
+  }
+  document.getElementById('d_produto').addEventListener('change', aplicarProdutoDireta);
+
+  function updateMesesDireta(){
+    var diff = monthsBetween(document.getElementById('d_dataEntrega').value);
+    var hint = document.getElementById('d_mesesHint');
+    if (diff === null){ hint.textContent = 'manual — preencha a data acima p/ calcular'; return; }
+    var base = diff - 1;
+    var sinaisUsados = [getVal('d_sinal1'), getVal('d_sinal2'), getVal('d_sinal3')].filter(function(v){ return v > 0; }).length;
+    var meses = Math.max(base - sinaisUsados, 1);
+    document.getElementById('d_mesesObra').value = meses;
+    hint.textContent = 'calculado: ' + diff + 'm até a entrega − 1 − ' + sinaisUsados + ' sinal(is) usado(s)';
+  }
+  document.getElementById('d_dataEntrega').addEventListener('change', function(){ updateMesesDireta(); calcDireta(); });
+  ['d_sinal1','d_sinal2','d_sinal3'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', function(){
+      if (document.getElementById('d_dataEntrega').value){ updateMesesDireta(); }
+    });
+  });
+
+  var lastDireta = {};
+  function calcDireta(){
+    var p = getDiretaProduto();
+    var valorImovel = getVal('d_valor');
+    var descontos   = getVal('d_desconto');
+    var ato         = getVal('d_ato');
+    var sinal1      = getVal('d_sinal1');
+    var sinal2      = getVal('d_sinal2');
+    var sinal3      = getVal('d_sinal3');
+    var pctEntrada  = getVal('d_pctEntrada')/100;
+    var pctObra     = getVal('d_pctObra')/100;
+    var mesesObra   = getVal('d_mesesObra') || 1;
+    var qtdPos      = getVal('d_qtdPos') || 1;
+
+    var valorFinal = valorImovel - descontos;
+    var entradaAlvo = pctEntrada * valorFinal;
+    var entradaAlocada = ato + sinal1 + sinal2 + sinal3;
+    var diffEntrada = entradaAlvo - entradaAlocada;
+    var chave = resolveAmt('d_pctChave', valorFinal);
+    var i1 = resolveAmt('d_pctInterm1', valorFinal);
+    var i2 = resolveAmt('d_pctInterm2', valorFinal);
+    var i3 = resolveAmt('d_pctInterm3', valorFinal);
+    var chavePctEff = effectivePct(chave, valorFinal);
+    var i1PctEff = effectivePct(i1, valorFinal);
+    var i2PctEff = effectivePct(i2, valorFinal);
+    var i3PctEff = effectivePct(i3, valorFinal);
+    var totalParcelamentoObra = (valorFinal * pctObra) - entradaAlocada - chave - i1 - i2 - i3;
+    var parcelaObraMensal = totalParcelamentoObra / mesesObra;
+    var totalPagoObra = totalParcelamentoObra + i1 + i2 + i3 + chave + entradaAlocada;
+    var valorPosObra = valorFinal - totalPagoObra;
+    var parcelaPos = valorPosObra / qtdPos;
+
+    var desc = document.getElementById('d_desc').value || 'Fluxo';
+    set('d_descEcho', desc);
+    set('d_out_parcelaPos', fmtBRL(parcelaPos));
+    set('d_out_valorFinal', fmtBRL(valorFinal));
+    set('d_out_entrada', fmtBRL(entradaAlocada));
+    set('d_out_ato', fmtBRL(ato));
+    set('d_out_sinal1', fmtBRL(sinal1));
+    set('d_out_sinal2', fmtBRL(sinal2));
+    set('d_out_sinal3', fmtBRL(sinal3));
+    set('d_out_chave', fmtBRL(chave));
+    set('d_out_interm1', fmtBRL(i1));
+    set('d_out_interm2', fmtBRL(i2));
+    set('d_out_interm3', fmtBRL(i3));
+    set('d_out_parcelaObra', fmtBRL(parcelaObraMensal) + ' × ' + mesesObra + 'm');
+    set('d_out_totalObra', fmtBRL(totalPagoObra));
+    set('d_out_posObra', fmtBRL(valorPosObra) + '  (' + qtdPos + 'x de ' + fmtBRL(parcelaPos) + ')');
+    updateHint('d_pctChave', 'd_pctChaveHint', valorFinal);
+    updateHint('d_pctInterm1', 'd_pctInterm1Hint', valorFinal);
+    updateHint('d_pctInterm2', 'd_pctInterm2Hint', valorFinal);
+    updateHint('d_pctInterm3', 'd_pctInterm3Hint', valorFinal);
+
+    var checkEl = document.getElementById('d_entradaCheck');
+    if (Math.abs(diffEntrada) < 1){
+      checkEl.innerHTML = '<b>Entrada alvo (' + (pctEntrada*100).toFixed(1) + '%): ' + fmtBRL(entradaAlvo) + '</b> — totalmente alocada entre Ato e Sinais.';
+    } else if (diffEntrada > 0){
+      checkEl.innerHTML = '<b>Entrada alvo: ' + fmtBRL(entradaAlvo) + '</b> — faltam ' + fmtBRL(diffEntrada) + ' para completar (Ato+Sinais somam ' + fmtBRL(entradaAlocada) + ').';
+    } else {
+      checkEl.innerHTML = '<b>Entrada alvo: ' + fmtBRL(entradaAlvo) + '</b> — Ato+Sinais somam ' + fmtBRL(entradaAlocada) + ', ' + fmtBRL(-diffEntrada) + ' acima do alvo.';
+    }
+
+    var errors = [];
+    if (ato < p.atoMin) errors.push('Ato abaixo do mínimo para ' + p.label + ' (' + fmtBRL(p.atoMin) + ').');
+    if (pctObra < p.pctObraMin - 0.0001) errors.push('% pago durante a obra abaixo do mínimo institucional de ' + (p.pctObraMin*100) + '% para ' + p.label + '.');
+    if (qtdPos > p.qtdPosMax) errors.push('Pós-obra deve ser em até ' + p.qtdPosMax + 'x.');
+    if (p.permite){
+      if (chavePctEff > p.pctChaveMax + 0.0001) errors.push('% Chave acima do máximo de ' + (p.pctChaveMax*100) + '% para ' + p.label + '.');
+      if (i1PctEff > p.pctIntermMax + 0.0001) errors.push('% Intermediária 1 acima do máximo de ' + (p.pctIntermMax*100).toString().replace('.',',') + '%.');
+      if (i2PctEff > p.pctIntermMax + 0.0001) errors.push('% Intermediária 2 acima do máximo de ' + (p.pctIntermMax*100).toString().replace('.',',') + '%.');
+      if (i3PctEff > p.pctIntermMax + 0.0001) errors.push('% Intermediária 3 acima do máximo de ' + (p.pctIntermMax*100).toString().replace('.',',') + '%.');
+    } else if (chave > 0 || i1 > 0 || i2 > 0 || i3 > 0){
+      errors.push(p.label + ' não aceita parcela-chave nem intermediárias — apenas parcelas mensais.');
+    }
+    var errBanner = document.getElementById('d_errors');
+    var errList = document.getElementById('d_errorsList');
+    if (errors.length){
+      errList.innerHTML = errors.map(function(e){ return '<li>' + e + '</li>'; }).join('');
+      errBanner.classList.add('show');
+    } else { errBanner.classList.remove('show'); }
+
+    lastDireta = {desc:desc, produto:p.label, valorImovel:valorImovel, valorFinal:valorFinal, entradaAlvo:entradaAlvo, entradaAlocada:entradaAlocada,
+      ato:ato, sinal1:sinal1, sinal2:sinal2, sinal3:sinal3, chave:chave, i1:i1, i2:i2, i3:i3,
+      parcelaObraMensal:parcelaObraMensal, mesesObra:mesesObra, totalPagoObra:totalPagoObra,
+      valorPosObra:valorPosObra, qtdPos:qtdPos, parcelaPos:parcelaPos, errors:errors};
+    if (typeof calcMesaDireta === 'function' && mesaCardIsOpen()) calcMesaDireta();
+  }
+  watch(['d_desc','d_valor','d_desconto','d_ato','d_sinal1','d_sinal2','d_sinal3','d_pctEntrada','d_pctChave','d_pctInterm1','d_pctInterm2','d_pctInterm3','d_pctObra','d_mesesObra','d_qtdPos'], calcDireta);
+
+  // ---------- Mesa de vendas: análise interna de reajuste (uso interno, nunca no export) ----------
+  var MESA_STORE_KEY = 'fluxos_mesa_indices_v1';
+  function mesaLoadIndices(){
+    try{
+      var raw = localStorage.getItem(MESA_STORE_KEY);
+      if (!raw) return;
+      var obj = JSON.parse(raw);
+      if (obj.incc !== undefined) document.getElementById('mesa_incc').value = obj.incc;
+      if (obj.ipca !== undefined) document.getElementById('mesa_ipca').value = obj.ipca;
+      if (obj.spread !== undefined) document.getElementById('mesa_spread').value = obj.spread;
+    } catch(e){ /* localStorage indisponível — segue com os padrões do HTML */ }
+  }
+  function mesaSaveIndices(){
+    try{
+      localStorage.setItem(MESA_STORE_KEY, JSON.stringify({
+        incc: document.getElementById('mesa_incc').value,
+        ipca: document.getElementById('mesa_ipca').value,
+        spread: document.getElementById('mesa_spread').value
+      }));
+    } catch(e){ /* localStorage indisponível — segue sem persistir */ }
+  }
+
+  var mesaToggleBtn = document.getElementById('mesaToggleBtn');
+  var mesaCard = document.getElementById('mesaCard');
+  function mesaCardIsOpen(){ return mesaCard && mesaCard.style.display !== 'none'; }
+  mesaToggleBtn.addEventListener('click', function(){
+    var isOpen = mesaCard.style.display !== 'none';
+    mesaCard.style.display = isOpen ? 'none' : 'block';
+    mesaToggleBtn.classList.toggle('open', !isOpen);
+    if (!isOpen) calcMesaDireta();
+  });
+
+  function calcMesaDireta(){
+    var d = lastDireta;
+    if (!d || d.valorFinal === undefined) return;
+    var incc12 = getVal('mesa_incc')/100;
+    var ipca12 = getVal('mesa_ipca')/100;
+    var spread = getVal('mesa_spread')/100;
+    var mesesObra = d.mesesObra || 1;
+
+    var taxaMensalIncc = Math.pow(1 + incc12, 1/12) - 1;
+    var taxaMensalIpca = Math.pow(1 + ipca12, 1/12) - 1;
+    var taxaMensalPosBruta = spread + taxaMensalIpca;
+    var aplicarTeto = document.getElementById('mesa_teto12').checked;
+    var taxaMensalCap = Math.pow(1.12, 1/12) - 1;
+    var taxaMensalPos = aplicarTeto ? Math.min(taxaMensalPosBruta, taxaMensalCap) : taxaMensalPosBruta;
+
+    var fatorObra = Math.pow(1 + taxaMensalIncc, mesesObra) - 1;
+    var chaveCorrigida = d.chave * (1 + fatorObra);
+    var totalObraCorrigido = d.totalPagoObra * (1 + fatorObra);
+    var saldoPosCorrigido = d.valorPosObra * (1 + fatorObra);
+    var parcelaPosInicial = saldoPosCorrigido / d.qtdPos;
+
+    var fatorPos12 = Math.pow(1 + taxaMensalPos, 12) - 1;
+    var parcelaPos12 = parcelaPosInicial * (1 + fatorPos12);
+
+    set('mesa_mesesObraEcho', mesesObra);
+    set('mesa_out_taxaMensalIncc', fmtPct(taxaMensalIncc));
+    set('mesa_out_fatorObra', fmtPct(fatorObra));
+    set('mesa_out_chaveCorrigida', fmtBRL(chaveCorrigida));
+    set('mesa_out_totalObraCorrigido', fmtBRL(totalObraCorrigido));
+    set('mesa_out_saldoPosCorrigido', fmtBRL(saldoPosCorrigido));
+    set('mesa_out_parcelaPosInicial', fmtBRL(parcelaPosInicial) + ' (era ' + fmtBRL(d.parcelaPos) + ' sem correção)');
+    set('mesa_out_taxaMensalIpca', fmtPct(taxaMensalIpca));
+    set('mesa_out_taxaMensalPos', fmtPct(taxaMensalPosBruta));
+    var tetoRow = document.getElementById('mesa_row_tetoAplicado');
+    if (aplicarTeto && taxaMensalPosBruta > taxaMensalCap){
+      tetoRow.style.display = '';
+      set('mesa_out_taxaMensalEfetiva', fmtPct(taxaMensalPos) + ' (travada pelo teto de 12% a.a.)');
+    } else {
+      tetoRow.style.display = 'none';
+    }
+    set('mesa_out_fatorPos12', fmtPct(fatorPos12));
+    set('mesa_out_parcelaPos12', fmtBRL(parcelaPos12));
+
+    var obraBody = document.querySelector('#mesa_tableObra tbody');
+    var rowsObra = '';
+    for (var m = 1; m <= mesesObra; m++){
+      var fatorM = Math.pow(1 + taxaMensalIncc, m) - 1;
+      var parcelaM = d.parcelaObraMensal * (1 + fatorM);
+      rowsObra += '<tr><td>' + m + '</td><td class="num">' + fmtPct(fatorM) + '</td><td class="num">' + fmtBRL(parcelaM) + '</td></tr>';
+    }
+    obraBody.innerHTML = rowsObra;
+
+    var posBody = document.querySelector('#mesa_tablePos tbody');
+    var rowsPos = '';
+    for (var mp = 1; mp <= 12; mp++){
+      var fatorMP = Math.pow(1 + taxaMensalPos, mp) - 1;
+      var parcelaMP = parcelaPosInicial * (1 + fatorMP);
+      rowsPos += '<tr><td>' + mp + '</td><td class="num">' + fmtPct(fatorMP) + '</td><td class="num">' + fmtBRL(parcelaMP) + '</td></tr>';
+    }
+    posBody.innerHTML = rowsPos;
+
+    mesaSaveIndices();
+  }
+  watch(['mesa_incc','mesa_ipca','mesa_spread','mesa_teto12'], calcMesaDireta);
+  mesaLoadIndices();
+
+  // ======================================================
+  // INVESTIDOR
+  // ======================================================
+  var INVESTIDOR_PRODUTOS = {
+    casaprado:   {label:'Casa Prado / Alentejo',     pctEntradaMin:0.20, pctChaveMax:0.05, pctIntermMax:0.04},
+    coresdamata: {label:'Cores da Mata / Alta Vista', pctEntradaMin:0.20, pctChaveMax:0.04, pctIntermMax:0.025}
+  };
+  function getInvestidorProduto(){ return INVESTIDOR_PRODUTOS[document.getElementById('i_produto').value]; }
+
+  function aplicarProdutoInvestidor(){
+    var p = getInvestidorProduto();
+    setDisabled('i_pctEntrada', false, (p.pctEntradaMin*100));
+    setUnit('i_pctChave', 'pct'); setUnitDisabled('i_pctChave', false); setDisabled('i_pctChave', false, (p.pctChaveMax*100));
+    setUnit('i_pctInterm1', 'pct'); setUnitDisabled('i_pctInterm1', false); setDisabled('i_pctInterm1', false, (p.pctIntermMax*100));
+    setUnit('i_pctInterm2', 'pct'); setUnitDisabled('i_pctInterm2', false); setDisabled('i_pctInterm2', false, (p.pctIntermMax*100));
+    document.getElementById('i_produtoInfo').innerHTML = '<b>' + p.label + ':</b> entrada mínima ' + (p.pctEntradaMin*100) + '% · chave máx. ' + (p.pctChaveMax*100) + '% · intermediárias máx. ' + (p.pctIntermMax*100).toString().replace('.', ',') + '% (mensais durante a obra).';
+    calcInvestidor();
+  }
+  document.getElementById('i_produto').addEventListener('change', aplicarProdutoInvestidor);
+
+  function updateMesesInvestidor(){
+    var diff = monthsBetween(document.getElementById('i_dataEntrega').value);
+    var hint = document.getElementById('i_mesesHint');
+    if (diff === null){ hint.textContent = 'manual — preencha a data acima p/ calcular'; return; }
+    var meses = Math.max(diff - 1, 1);
+    document.getElementById('i_mesesObra').value = meses;
+    hint.textContent = 'calculado: ' + diff + 'm até a entrega − 1';
+  }
+  document.getElementById('i_dataEntrega').addEventListener('change', function(){ updateMesesInvestidor(); calcInvestidor(); });
+
+  var lastInvestidor = {};
+  function calcInvestidor(){
+    var p = getInvestidorProduto();
+    var valorImovel = getVal('i_valor');
+    var descontos   = getVal('i_desconto');
+    var pctEntrada  = getVal('i_pctEntrada')/100;
+    var mesesObra   = getVal('i_mesesObra') || 1;
+
+    var valorFinal = valorImovel - descontos;
+    var entrada = pctEntrada * valorFinal;
+    var chave = resolveAmt('i_pctChave', valorFinal);
+    var i1 = resolveAmt('i_pctInterm1', valorFinal);
+    var i2 = resolveAmt('i_pctInterm2', valorFinal);
+    var chavePctEff = effectivePct(chave, valorFinal);
+    var i1PctEff = effectivePct(i1, valorFinal);
+    var i2PctEff = effectivePct(i2, valorFinal);
+    var total = valorFinal - entrada - chave - i1 - i2;
+    var parcela = total / mesesObra;
+
+    var desc = document.getElementById('i_desc').value || 'Fluxo';
+    set('i_descEcho', desc);
+    set('i_out_parcela', fmtBRL(parcela) + ' × ' + mesesObra + 'm');
+    set('i_out_valorFinal', fmtBRL(valorFinal));
+    set('i_out_entrada', fmtBRL(entrada));
+    set('i_out_chave', fmtBRL(chave));
+    set('i_out_interm1', fmtBRL(i1));
+    set('i_out_interm2', fmtBRL(i2));
+    set('i_out_total', fmtBRL(total));
+    updateHint('i_pctChave', 'i_pctChaveHint', valorFinal);
+    updateHint('i_pctInterm1', 'i_pctInterm1Hint', valorFinal);
+    updateHint('i_pctInterm2', 'i_pctInterm2Hint', valorFinal);
+
+    var errors = [];
+    if (pctEntrada < p.pctEntradaMin - 0.0001) errors.push('% Entrada abaixo do mínimo de ' + (p.pctEntradaMin*100) + '% para ' + p.label + '.');
+    if (chavePctEff > p.pctChaveMax + 0.0001) errors.push('% Chave acima do máximo de ' + (p.pctChaveMax*100) + '% para ' + p.label + '.');
+    if (i1PctEff > p.pctIntermMax + 0.0001) errors.push('% Intermediária 1 acima do máximo de ' + (p.pctIntermMax*100).toString().replace('.',',') + '%.');
+    if (i2PctEff > p.pctIntermMax + 0.0001) errors.push('% Intermediária 2 acima do máximo de ' + (p.pctIntermMax*100).toString().replace('.',',') + '%.');
+    var errBanner = document.getElementById('i_errors');
+    var errList = document.getElementById('i_errorsList');
+    if (errors.length){
+      errList.innerHTML = errors.map(function(e){ return '<li>' + e + '</li>'; }).join('');
+      errBanner.classList.add('show');
+    } else { errBanner.classList.remove('show'); }
+
+    lastInvestidor = {desc:desc, produto:p.label, valorImovel:valorImovel, valorFinal:valorFinal, entrada:entrada, chave:chave,
+      i1:i1, i2:i2, total:total, mesesObra:mesesObra, parcela:parcela, errors:errors};
+  }
+  watch(['i_desc','i_valor','i_desconto','i_pctEntrada','i_pctChave','i_pctInterm1','i_pctInterm2','i_mesesObra'], calcInvestidor);
+
+  // ======================================================
+  // ASSOCIATIVO
+  // ======================================================
+  var ASSOCIATIVO_PRODUTOS = {
+    seleto:      {label:'Seleto',       atoMin:1500, taxa:0.64},
+    coresdamata: {label:'Cores da Mata',atoMin:3500, taxa:0.54},
+    altavista:   {label:'Alta Vista',   atoMin:3500, taxa:0.47}
+  };
+  var TIERS = [
+    {key:'diamante', label:'Diamante',      icon:'ti-diamond',  cls:'tier-diamante', ps:25, renda:20},
+    {key:'ouro',     label:'Ouro',          icon:'ti-trophy',   cls:'tier-ouro',     ps:20, renda:20},
+    {key:'prata',    label:'Prata',         icon:'ti-medal',    cls:'tier-prata',    ps:18, renda:18},
+    {key:'bronze',   label:'Bronze',        icon:'ti-medal-2',  cls:'tier-bronze',   ps:15, renda:15},
+    {key:'aco',      label:'Aço',           icon:'ti-settings', cls:'tier-aco',      ps:12, renda:10},
+    {key:'nao',      label:'Não elegível',  icon:'ti-ban',      cls:'tier-nao',      ps:0,  renda:0}
+  ];
+  var tiersRefBody = document.getElementById('tiersRefBody');
+  TIERS.forEach(function(t){
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td class="tier-name ' + t.cls + '"><i class="ti ' + t.icon + '"></i>' + t.label + '</td>' +
+      '<td class="num">' + (t.key === 'nao' ? '—' : t.ps + '%') + '</td>' +
+      '<td class="num">' + (t.key === 'nao' ? '—' : t.renda + '%') + '</td>';
+    tiersRefBody.appendChild(tr);
+  });
+
+  function getAssociativoProduto(){ return ASSOCIATIVO_PRODUTOS[document.getElementById('a_produto').value]; }
+  function getSelectedTier(){
+    var v = document.getElementById('a_tier').value;
+    return TIERS.find(function(t){ return t.key === v; }) || TIERS[0];
+  }
+
+  function aplicarProdutoAssociativo(){
+    var p = getAssociativoProduto();
+    setDisabled('a_ato', false, p.atoMin);
+    setDisabled('a_taxa', true, p.taxa);
+    document.getElementById('a_atoHint').textContent = 'mínimo: ' + fmtBRL(p.atoMin);
+    calcAssociativo();
+  }
+  document.getElementById('a_produto').addEventListener('change', aplicarProdutoAssociativo);
+
+  var lastAssociativo = {};
+  function calcAssociativo(){
+    var prod = getAssociativoProduto();
+    var valorImovel = getVal('a_valor');
+    var pctDesconto = getVal('a_pctDesconto')/100;
+    var voltaCaixa  = getVal('a_voltaCaixa');
+    var renda       = getVal('a_renda');
+    var resultadoAnalise = getVal('a_resultadoAnalise');
+    var parcelaCaixa = getVal('a_parcelaCaixa');
+    var sistemaAmort = document.getElementById('a_sistemaAmort').value;
+    var ato = getVal('a_ato'), s1 = getVal('a_sinal1'), s2 = getVal('a_sinal2'), s3 = getVal('a_sinal3');
+    var fgts = getVal('a_fgts'), anual = getVal('a_anual');
+    var taxa = getVal('a_taxa')/100;
+    var qtdParcelas = getVal('a_qtdParcelas') || 1;
+
+    var desconto = pctDesconto * valorImovel;
+    var valorFinal = valorImovel - desconto - voltaCaixa;
+    var saldo = valorFinal - resultadoAnalise;
+    var valorPS = saldo - ato - s1 - s2 - s3 - fgts - anual;
+    var pctPSsobreFinal = valorFinal !== 0 ? valorPS / valorFinal : 0;
+    var osAjustado = valorPS * Math.pow(1 + taxa, qtdParcelas);
+    var parcelaAjustada = osAjustado / qtdParcelas;
+    var parcelaSemReajuste = valorPS / qtdParcelas;
+    var comprometRenda = renda !== 0 ? parcelaAjustada / renda : 0;
+
+    set('a_out_valorImovel', fmtBRL(valorImovel));
+    set('a_out_desconto', '- ' + fmtBRL(desconto));
+    set('a_out_voltaCaixa', '- ' + fmtBRL(voltaCaixa));
+    set('a_out_valorFinal', fmtBRL(valorFinal));
+    set('a_out_saldo', fmtBRL(saldo));
+    set('a_out_ato', fmtBRL(ato));
+    set('a_out_sinais', fmtBRL(s1) + ' / ' + fmtBRL(s2) + ' / ' + fmtBRL(s3));
+    set('a_out_fgtsAnual', fmtBRL(fgts) + ' / ' + fmtBRL(anual));
+    set('a_out_valorPS', fmtBRL(valorPS));
+    set('a_out_parcelaSemReajuste', fmtBRL(parcelaSemReajuste));
+    set('a_out_osAjustado', fmtBRL(osAjustado));
+    set('a_out_parcelaAjustada', fmtBRL(parcelaAjustada));
+    set('a_out_valorFinanciado', fmtBRL(resultadoAnalise));
+    set('a_out_parcelaCaixa', fmtBRL(parcelaCaixa));
+    set('a_out_sistemaAmort', sistemaAmort);
+    set('a_check_ps', fmtPct(pctPSsobreFinal));
+    set('a_check_renda', fmtPct(comprometRenda));
+
+    var tier = getSelectedTier();
+    set('a_tierEcho', tier.label);
+    set('a_tierLimitePS', tier.key === 'nao' ? '—' : tier.ps + '%');
+    set('a_tierLimiteRenda', tier.key === 'nao' ? '—' : tier.renda + '%');
+
+    var badges = document.getElementById('a_badges');
+    badges.innerHTML = '';
+    function addBadge(ok, textOk, textBad){
+      var b = document.createElement('span');
+      b.className = 'badge ' + (ok ? 'ok' : 'danger');
+      b.innerHTML = '<i class="ti ' + (ok ? 'ti-check' : 'ti-alert-triangle') + '"></i>' + (ok ? textOk : textBad);
+      badges.appendChild(b);
+    }
+    var elegivel = true, psOk = true, rendaOk = true;
+    if (tier.key === 'nao'){
+      addBadge(false, '', 'Cliente não elegível ao associativo');
+      elegivel = false;
+    } else {
+      psOk = pctPSsobreFinal*100 <= tier.ps;
+      rendaOk = comprometRenda*100 <= tier.renda;
+      addBadge(psOk, 'PS dentro do limite (' + tier.ps + '%)', 'PS acima do limite (' + tier.ps + '%)');
+      addBadge(rendaOk, 'Parcela dentro do limite de renda', 'Parcela acima do limite de renda');
+    }
+
+    var errors = [];
+    if (ato < prod.atoMin) errors.push('Ato abaixo do mínimo de ' + fmtBRL(prod.atoMin) + ' para ' + prod.label + '.');
+    if (qtdParcelas > 84) errors.push('Quantidade de parcelas acima do máximo de 84x.');
+    var errBanner = document.getElementById('a_errors');
+    var errList = document.getElementById('a_errorsList');
+    if (errors.length){ errList.innerHTML = errors.map(function(e){ return '<li>' + e + '</li>'; }).join(''); errBanner.classList.add('show'); }
+    else { errBanner.classList.remove('show'); }
+
+    var warns = [];
+    if (renda > 0 && anual > renda*0.5) warns.push('Parcela anual (' + fmtBRL(anual) + ') acima de 50% da renda do cliente — utilize apenas em último caso.');
+    var warnBanner = document.getElementById('a_warns');
+    var warnList = document.getElementById('a_warnsList');
+    if (warns.length){ warnList.innerHTML = warns.map(function(w){ return '<li>' + w + '</li>'; }).join(''); warnBanner.classList.add('show'); }
+    else { warnBanner.classList.remove('show'); }
+
+    lastAssociativo = {produto:prod.label, valorImovel:valorImovel, valorFinal:valorFinal, desconto:desconto, pctDesconto:pctDesconto,
+      voltaCaixa:voltaCaixa, saldo:saldo, resultadoAnalise:resultadoAnalise, parcelaCaixa:parcelaCaixa, sistemaAmort:sistemaAmort,
+      ato:ato, s1:s1, s2:s2, s3:s3, fgts:fgts, anual:anual, valorPS:valorPS, pctPSsobreFinal:pctPSsobreFinal, osAjustado:osAjustado,
+      parcelaAjustada:parcelaAjustada, parcelaSemReajuste:parcelaSemReajuste, comprometRenda:comprometRenda,
+      renda:renda, qtdParcelas:qtdParcelas, taxa:taxa, tier:tier, elegivel:elegivel, psOk:psOk, rendaOk:rendaOk, errors:errors, warns:warns};
+  }
+  watch(['a_produto','a_valor','a_avaliacao','a_tier','a_renda','a_pctDesconto','a_voltaCaixa','a_resultadoAnalise','a_parcelaCaixa','a_sistemaAmort','a_ato','a_sinal1','a_sinal2','a_sinal3','a_fgts','a_anual','a_qtdParcelas'], calcAssociativo);
+
+  // ---------- Print report generation ----------
+  var hojeStr = new Date().toLocaleDateString('pt-BR');
+
+  function repHeader(titulo, subtitulo){
+    return '<div class="rep-header"><div><h2>' + titulo + '</h2><div class="rep-sub">' + subtitulo + '</div></div>' +
+      '<div class="rep-meta">Direcional/Riva<br>Gerado em ' + hojeStr + '</div></div>';
+  }
+
+  function buildReportDireta(){
+    var d = lastDireta;
+    var html = repHeader('Simulação de Fluxo — Tabela Direta', d.desc + ' · ' + d.produto);
+    html += '<div class="rep-hero"><div><div class="l">Valor final do imóvel</div><div class="v">' + fmtBRL(d.valorFinal) + '</div></div>' +
+      '<div style="text-align:right"><div class="l">Parcela pós-obra</div><div class="v">' + fmtBRL(d.parcelaPos) + '</div></div></div>';
+    if (d.errors.length){
+      html += '<div class="rep-notes" style="border-left-color:#C0392B;color:#C0392B;"><b>Fora dos parâmetros:</b> ' + d.errors.join(' ') + '</div>';
+    }
+    html += '<div class="rep-block"><h4>Entrada e sinais</h4><table>' +
+      '<tr><td>Ato — assinatura do contrato</td><td class="num">' + fmtBRL(d.ato) + '</td></tr>' +
+      '<tr><td>Sinal 1 — 30 dias</td><td class="num">' + fmtBRL(d.sinal1) + '</td></tr>' +
+      '<tr><td>Sinal 2 — 60 dias</td><td class="num">' + fmtBRL(d.sinal2) + '</td></tr>' +
+      '<tr><td>Sinal 3 — 90 dias</td><td class="num">' + fmtBRL(d.sinal3) + '</td></tr>' +
+      '<tr class="total"><td>Total de entrada</td><td class="num">' + fmtBRL(d.entradaAlocada) + '</td></tr></table></div>';
+    html += '<div class="rep-block"><h4>Fluxo durante a obra (' + d.mesesObra + ' meses)</h4><table>' +
+      '<tr><td>Parcela-chave (3 meses antes da entrega)</td><td class="num">' + fmtBRL(d.chave) + '</td></tr>' +
+      '<tr><td>Intermediária 1</td><td class="num">' + fmtBRL(d.i1) + '</td></tr>' +
+      '<tr><td>Intermediária 2</td><td class="num">' + fmtBRL(d.i2) + '</td></tr>' +
+      '<tr><td>Intermediária 3</td><td class="num">' + fmtBRL(d.i3) + '</td></tr>' +
+      '<tr><td>Parcelas mensais na obra (' + d.mesesObra + 'x)</td><td class="num">' + fmtBRL(d.parcelaObraMensal) + '</td></tr>' +
+      '<tr class="total"><td>Total pago durante a obra</td><td class="num">' + fmtBRL(d.totalPagoObra) + '</td></tr></table></div>';
+    html += '<div class="rep-block"><h4>Pós-obra</h4><table>' +
+      '<tr><td>Saldo financiado com a construtora</td><td class="num">' + fmtBRL(d.valorPosObra) + '</td></tr>' +
+      '<tr class="total"><td>' + d.qtdPos + 'x de</td><td class="num">' + fmtBRL(d.parcelaPos) + '</td></tr></table></div>';
+    html += '<div class="rep-notes">Contrato durante a obra corrigido pelo INCC. Contrato pós-obra corrigido por 1% + IPCA ao mês sobre o saldo devedor. Valores acima não incluem esses reajustes futuros — data-base ' + hojeStr + '.</div>';
+    return html;
+  }
+
+  function buildReportInvestidor(){
+    var d = lastInvestidor;
+    var html = repHeader('Simulação de Fluxo — Tabela Investidor', d.desc + ' · ' + d.produto);
+    html += '<div class="rep-hero"><div><div class="l">Valor final do imóvel</div><div class="v">' + fmtBRL(d.valorFinal) + '</div></div>' +
+      '<div style="text-align:right"><div class="l">Parcela mensal (' + d.mesesObra + 'x)</div><div class="v">' + fmtBRL(d.parcela) + '</div></div></div>';
+    if (d.errors.length){
+      html += '<div class="rep-notes" style="border-left-color:#C0392B;color:#C0392B;"><b>Fora dos parâmetros:</b> ' + d.errors.join(' ') + '</div>';
+    }
+    html += '<div class="rep-block"><h4>Fluxo — 100% durante a obra</h4><table>' +
+      '<tr><td>Entrada</td><td class="num">' + fmtBRL(d.entrada) + '</td></tr>' +
+      '<tr><td>Parcela-chave</td><td class="num">' + fmtBRL(d.chave) + '</td></tr>' +
+      '<tr><td>Intermediária 1</td><td class="num">' + fmtBRL(d.i1) + '</td></tr>' +
+      '<tr><td>Intermediária 2</td><td class="num">' + fmtBRL(d.i2) + '</td></tr>' +
+      '<tr class="total"><td>Total parcelado na obra (' + d.mesesObra + 'x)</td><td class="num">' + fmtBRL(d.total) + '</td></tr></table></div>';
+    html += '<div class="rep-notes">Contrato durante a obra sem correção ou juros. Documento pago na entrega das chaves. Data-base ' + hojeStr + '.</div>';
+    return html;
+  }
+
+  function buildReportAssociativo(){
+    var d = lastAssociativo;
+    var html = repHeader('Simulação de Fluxo — Associativo', d.produto + ' · Enquadramento: ' + d.tier.label);
+    html += '<div class="rep-hero"><div><div class="l">Valor final do imóvel</div><div class="v">' + fmtBRL(d.valorFinal) + '</div></div>' +
+      '<div style="text-align:right"><div class="l">Parcela ajustada</div><div class="v">' + fmtBRL(d.parcelaAjustada) + '</div></div></div>';
+    html += '<div class="rep-block"><h4>Composição do valor final</h4><table>' +
+      '<tr><td>Valor do imóvel</td><td class="num">' + fmtBRL(d.valorImovel) + '</td></tr>' +
+      '<tr class="sub"><td>↳ Desconto associativo (' + (d.pctDesconto*100).toFixed(1) + '%)</td><td class="num">- ' + fmtBRL(d.desconto) + '</td></tr>' +
+      '<tr class="sub"><td>↳ Volta de caixa</td><td class="num">- ' + fmtBRL(d.voltaCaixa) + '</td></tr>' +
+      '<tr class="total"><td>Valor final</td><td class="num">' + fmtBRL(d.valorFinal) + '</td></tr></table></div>';
+    html += '<div class="rep-block"><h4>Financiamento bancário (Caixa)</h4><table>' +
+      '<tr><td>Valor financiado</td><td class="num">' + fmtBRL(d.resultadoAnalise) + '</td></tr>' +
+      '<tr class="total"><td>Parcela (' + d.sistemaAmort + ')</td><td class="num">' + fmtBRL(d.parcelaCaixa) + '</td></tr></table></div>';
+    html += '<div class="rep-block"><h4>Saldo não financiado (Valor PS)</h4><table>' +
+      '<tr><td>Saldo remanescente</td><td class="num">' + fmtBRL(d.saldo) + '</td></tr>' +
+      '<tr class="sub"><td>↳ Ato</td><td class="num">' + fmtBRL(d.ato) + '</td></tr>' +
+      '<tr class="sub"><td>↳ Sinal 1 / 2 / 3</td><td class="num">' + fmtBRL(d.s1) + ' / ' + fmtBRL(d.s2) + ' / ' + fmtBRL(d.s3) + '</td></tr>' +
+      '<tr class="sub"><td>↳ FGTS / Anual</td><td class="num">' + fmtBRL(d.fgts) + ' / ' + fmtBRL(d.anual) + '</td></tr>' +
+      '<tr class="total"><td>Valor PS</td><td class="num">' + fmtBRL(d.valorPS) + '</td></tr></table></div>';
+    html += '<div class="rep-block"><h4>Parcelamento (' + d.qtdParcelas + 'x)</h4><table>' +
+      '<tr><td>Parcela sem reajuste (referência)</td><td class="num">' + fmtBRL(d.parcelaSemReajuste) + '</td></tr>' +
+      '<tr class="total"><td>Parcela ajustada (com reajuste projetado)</td><td class="num">' + fmtBRL(d.parcelaAjustada) + '</td></tr></table></div>';
+    html += '<div class="rep-badges">' +
+      (d.elegivel ? (
+        '<span class="rep-badge ' + (d.psOk ? 'ok' : 'bad') + '">PS ' + fmtPct(d.pctPSsobreFinal) + ' — limite ' + d.tier.ps + '%</span>' +
+        '<span class="rep-badge ' + (d.rendaOk ? 'ok' : 'bad') + '">Parcela/renda ' + fmtPct(d.comprometRenda) + ' — limite ' + d.tier.renda + '%</span>'
+      ) : '<span class="rep-badge bad">Cliente não elegível ao associativo</span>') + '</div>';
+    var notas = 'Parcelamento durante a obra corrigido pelo INCC; pós-chaves corrigido por 1% + IPCA. Parcela ajustada projeta reajuste de ' + (d.taxa*100).toFixed(2) + '% ao mês sobre o Valor PS pelo prazo total. Data-base ' + hojeStr + '.';
+    if (d.errors.length) notas = '<b style="color:#C0392B;">Fora dos parâmetros: ' + d.errors.join(' ') + '</b><br>' + notas;
+    if (d.warns.length) notas = '<b style="color:#B7791F;">' + d.warns.join(' ') + '</b><br>' + notas;
+    html += '<div class="rep-notes">' + notas + '</div>';
+    return html;
+  }
+
+  function buildFooter(){
+    return '<div class="rep-footer">Documento gerado automaticamente pelo app de Fluxos de Pagamento — Direcional/Riva. Não substitui a simulação oficial do banco/construtora.</div>';
+  }
+
+  function exportReport(type){
+    var el = document.getElementById('printReport');
+    if (type === 'direta') el.innerHTML = buildReportDireta() + buildFooter();
+    else if (type === 'investidor') el.innerHTML = buildReportInvestidor() + buildFooter();
+    else if (type === 'associativo') el.innerHTML = buildReportAssociativo() + buildFooter();
+    document.body.classList.add('printing');
+    window.print();
+  }
+  document.querySelectorAll('.export-btn').forEach(function(btn){ btn.addEventListener('click', function(){ exportReport(btn.dataset.export); }); });
+  document.getElementById('printBtn').addEventListener('click', function(){
+    var activePanel = document.querySelector('.panel.active');
+    var type = activePanel ? activePanel.id.replace('panel-', '') : 'direta';
+    if (type !== 'direta' && type !== 'investidor' && type !== 'associativo'){ type = 'direta'; }
+    exportReport(type);
+  });
+  window.addEventListener('afterprint', function(){ document.body.classList.remove('printing'); });
+
+  // ---------- Init ----------
+  aplicarProdutoDireta();
+  aplicarProdutoInvestidor();
+  aplicarProdutoAssociativo();
+  updateMesesDireta();
+  updateMesesInvestidor();
+  calcDireta();
+  calcInvestidor();
+  calcAssociativo();
+})();
+</script>
+
+</body>
+</html>
